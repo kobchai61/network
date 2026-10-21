@@ -1,0 +1,1518 @@
+<!doctype html>
+<html lang="th"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>ติวไฟนอล Network</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@500;600;700&family=IBM+Plex+Sans+Thai:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;600&display=swap">
+<style>
+/* Layout: sticky chapter rail (wire-colour coded by T568B pairs) + one reading column; exam map up front */
+:root{
+  --paper:#F2F5F7; --card:#FFFFFF; --soft:#E7EDF1; --ink:#13202B; --muted:#56656F; --line:#D3DBE1;
+  --or:#C2561A; --or-soft:#FBE8DB; --gr:#1F7A4B; --gr-soft:#DDF0E4; --bl:#1D55A3; --bl-soft:#DFE8F6; --br:#7A4E33; --br-soft:#F0E4DB;
+  --bad:#B83227; --bad-soft:#F8E1DE; --good:#1F7A4B; --hl:#FFE7A3;
+  --f-disp:"Chakra Petch","IBM Plex Sans Thai",system-ui,sans-serif;
+  --f-body:"IBM Plex Sans Thai","Noto Sans Thai",system-ui,sans-serif;
+  --f-mono:"IBM Plex Mono",ui-monospace,Menlo,Consolas,monospace;
+  --c:var(--ink); --cs:var(--soft);
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --paper:#0E151C; --card:#151F29; --soft:#1C2833; --ink:#E3E9EE; --muted:#93A1AD; --line:#2A3846;
+  --or:#F08C4E; --or-soft:#3A2518; --gr:#5BC38B; --gr-soft:#16301F; --bl:#7AA5EA; --bl-soft:#17263B; --br:#CF9A78; --br-soft:#30231A;
+  --bad:#F07A6E; --bad-soft:#3A1C19; --good:#5BC38B; --hl:#5A4710; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --paper:#0E151C; --card:#151F29; --soft:#1C2833; --ink:#E3E9EE; --muted:#93A1AD; --line:#2A3846;
+  --or:#F08C4E; --or-soft:#3A2518; --gr:#5BC38B; --gr-soft:#16301F; --bl:#7AA5EA; --bl-soft:#17263B; --br:#CF9A78; --br-soft:#30231A;
+  --bad:#F07A6E; --bad-soft:#3A1C19; --good:#5BC38B; --hl:#5A4710; color-scheme:dark}
+
+*{box-sizing:border-box}
+body{margin:0}img{max-width:100%}[hidden]{display:none!important}
+html{scroll-behavior:smooth;scroll-padding-top:80px}
+body{background:var(--paper);color:var(--ink);font:400 15.5px/1.75 var(--f-body);
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:30;background:var(--paper)}
+@media (prefers-reduced-motion:reduce){html{scroll-behavior:auto}*,*::before,*::after{animation:none!important;transition:none!important}}
+a{color:var(--bl)}
+:focus-visible{outline:2px solid var(--bl);outline-offset:2px;border-radius:4px}
+.m{font-family:var(--f-mono);font-size:.9em;letter-spacing:-.01em}
+.shell{max-width:1220px;margin:0 auto;display:grid;grid-template-columns:232px minmax(0,1fr);gap:44px;padding-block:28px 96px}
+main{min-width:0;max-width:880px}
+
+/* ---------- side rail ---------- */
+nav.rail{position:sticky;top:calc(env(safe-area-inset-top,0px) + 20px);align-self:start;max-height:calc(100vh - 40px);overflow:auto;padding-right:4px}
+.rail-title{font:700 15px/1.2 var(--f-disp);letter-spacing:.02em;margin:0 0 4px}
+.rail-sub{font-size:12.5px;color:var(--muted);margin:0 0 14px}
+.rail ol{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:2px}
+.rail a{display:grid;grid-template-columns:14px 1fr auto;align-items:center;gap:8px;text-decoration:none;color:var(--ink);font-size:13.5px;line-height:1.35;padding:6px 8px;border-radius:6px}
+.rail a:hover{background:var(--soft)}
+.rail a.cur{background:var(--card);box-shadow:0 0 0 1px var(--line)}
+.rail .w{width:14px;height:6px;border-radius:3px;background:var(--wc,var(--muted))}
+.rail .w.st{background:repeating-linear-gradient(90deg,var(--wc) 0 4px,var(--card) 4px 7px);box-shadow:0 0 0 1px var(--wc)}
+.rail .ck{font:600 11px var(--f-mono);color:var(--good);opacity:0}
+.rail a.done .ck{opacity:1}
+.rail .grp{font:600 11px/1 var(--f-disp);letter-spacing:.1em;text-transform:uppercase;color:var(--muted);padding:14px 8px 4px}
+.prog{margin-top:14px;font-size:12.5px;color:var(--muted)}
+.prog-bar{height:4px;background:var(--line);border-radius:2px;margin-top:6px;overflow:hidden}
+.prog-bar i{display:block;height:100%;width:0;background:var(--gr);transition:width .3s}
+@media (max-width:980px){
+  .shell{grid-template-columns:minmax(0,1fr);gap:0;padding-top:0}
+  nav.rail{position:sticky;top:env(safe-area-inset-top,0px);z-index:20;max-height:none;overflow-x:auto;overflow-y:hidden;background:var(--paper);border-bottom:1px solid var(--line);padding:10px 0;margin-bottom:8px;scrollbar-width:none}
+  nav.rail::-webkit-scrollbar{display:none}
+  .rail-title,.rail-sub,.rail .grp,.prog{display:none}
+  .rail ol{flex-direction:row;gap:6px;width:max-content}
+  .rail a{grid-template-columns:14px auto auto;white-space:nowrap;background:var(--card);box-shadow:0 0 0 1px var(--line);font-size:13px}
+}
+
+/* ---------- hero ---------- */
+.hero{padding-block:8px 28px}
+.eyebrow{font:600 12.5px/1.2 var(--f-disp);letter-spacing:.12em;text-transform:uppercase;color:var(--muted);margin:0}
+h1{font:700 clamp(34px,6vw,58px)/1.08 var(--f-disp);margin:10px 0 14px;letter-spacing:-.01em;text-wrap:balance}
+h1 .cable{display:inline-flex;gap:3px;vertical-align:middle;margin-left:10px;transform:translateY(-6px)}
+h1 .cable i{display:block;width:8px;height:34px;border-radius:4px}
+.lead{font-size:17px;max-width:62ch;color:var(--ink);margin:0 0 18px}
+.legend{display:flex;flex-wrap:wrap;gap:8px 18px;font-size:13px;color:var(--muted);margin:0 0 26px}
+.legend span{display:inline-flex;align-items:center;gap:7px}
+.legend i{width:22px;height:6px;border-radius:3px;display:inline-block}
+.map{display:grid;grid-template-columns:repeat(auto-fill,minmax(205px,1fr));gap:10px}
+.tile{display:flex;flex-direction:column;gap:6px;text-decoration:none;color:var(--ink);background:var(--card);border:1px solid var(--line);border-radius:10px;padding:12px 14px 13px;transition:transform .15s,border-color .15s}
+.tile:hover{transform:translateY(-2px);border-color:var(--wc)}
+.tile .n{display:flex;align-items:center;justify-content:space-between;font:700 26px/1 var(--f-disp);color:var(--wc)}
+.tile .n small{font:500 11.5px/1 var(--f-body);color:var(--muted);letter-spacing:0}
+.tile b{font:600 14.5px/1.4 var(--f-body)}
+.tile p{margin:0;font-size:13px;line-height:1.5;color:var(--muted)}
+.tile.dim{background:transparent;border-style:dashed}
+
+/* ---------- sections ---------- */
+section.ch{padding-block:44px 8px;border-top:1px solid var(--line)}
+.t-or{--c:var(--or);--cs:var(--or-soft)} .t-gr{--c:var(--gr);--cs:var(--gr-soft)} .t-bl{--c:var(--bl);--cs:var(--bl-soft)} .t-br{--c:var(--br);--cs:var(--br-soft)} .t-ink{--c:var(--ink);--cs:var(--soft)}
+.ch-top{display:flex;flex-wrap:wrap;align-items:center;gap:8px 12px}
+.ch-no{font:600 12.5px/1 var(--f-disp);letter-spacing:.12em;text-transform:uppercase;color:var(--c)}
+.ex{display:inline-flex;align-items:center;gap:5px;font:600 12px/1 var(--f-disp);letter-spacing:.04em;background:var(--ink);color:var(--paper);border-radius:999px;padding:5px 10px;text-decoration:none}
+.readbtn{margin-left:auto;font:500 12.5px/1 var(--f-body);color:var(--muted);background:transparent;border:1px solid var(--line);border-radius:999px;padding:6px 11px;cursor:pointer}
+.readbtn[aria-pressed="true"]{color:var(--good);border-color:var(--good)}
+h2{font:700 clamp(25px,3.6vw,34px)/1.22 var(--f-disp);margin:10px 0 10px;text-wrap:balance}
+h3{font:600 21px/1.3 var(--f-disp);margin:34px 0 8px;text-wrap:balance}
+h3 .ex{vertical-align:middle;margin-left:6px;font-size:11px}
+h4{font:600 16px/1.4 var(--f-body);margin:20px 0 6px}
+p{margin:0 0 12px}
+ul,ol{margin:0 0 12px;padding-left:22px}
+li{margin:3px 0}
+li::marker{color:var(--c)}
+.sub{color:var(--muted);font-size:15px;max-width:66ch}
+.kbd{font:500 12.5px var(--f-mono);background:var(--soft);border:1px solid var(--line);border-radius:4px;padding:1px 5px}
+mark{background:var(--hl);color:inherit;border-radius:3px;padding:0 2px}
+
+.box{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:16px 18px 6px;margin:18px 0}
+.tag{display:inline-block;font:600 11.5px/1 var(--f-disp);letter-spacing:.1em;text-transform:uppercase;padding:5px 8px;border-radius:4px;background:var(--cs);color:var(--c);margin-bottom:10px}
+.box.trap{border-color:color-mix(in srgb,var(--bad) 45%,var(--line))}
+.box.trap .tag{background:var(--bad-soft);color:var(--bad)}
+.box.tool{border:1.5px solid var(--c)}
+.box.key{background:var(--cs);border-color:transparent}
+.box.key .tag{background:var(--card)}
+.box.ans .tag{background:var(--ink);color:var(--paper)}
+.two{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:12px;margin:14px 0}
+.two>.box{margin:0}
+.cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:10px;margin:14px 0}
+.mini{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:12px 14px}
+.mini h4{margin:0 0 4px;font-size:15px}
+.mini p{font-size:14px;margin:0;color:var(--muted)}
+.mini .k{font:600 11px/1 var(--f-disp);letter-spacing:.08em;color:var(--c);text-transform:uppercase}
+
+.tw{overflow-x:auto;margin:14px 0;border:1px solid var(--line);border-radius:10px;background:var(--card)}
+table{border-collapse:collapse;width:100%;font-size:14.5px;line-height:1.5}
+th,td{padding:8px 12px;border-bottom:1px solid var(--line);text-align:left;vertical-align:top}
+tr:last-child td{border-bottom:0}
+th{font:600 12.5px/1.3 var(--f-disp);letter-spacing:.04em;color:var(--muted);background:var(--soft);white-space:nowrap}
+td.num,th.num{text-align:right;font-variant-numeric:tabular-nums}
+tr.win td{background:var(--gr-soft)}
+tr.hit td{background:color-mix(in srgb,var(--gr-soft) 45%,transparent)}
+tr.miss td{color:var(--muted)}
+.ok{color:var(--good);font-weight:600}.no{color:var(--bad);font-weight:600}
+
+.steps{counter-reset:s;list-style:none;padding:0;display:flex;flex-direction:column;gap:8px}
+.steps>li{counter-increment:s;display:grid;grid-template-columns:30px minmax(0,1fr);gap:10px;align-items:start;margin:0}
+.steps>li::before{content:counter(s);font:700 14px/30px var(--f-disp);text-align:center;width:30px;height:30px;border-radius:50%;background:var(--cs);color:var(--c)}
+
+/* forms */
+.row{display:flex;flex-wrap:wrap;gap:10px;align-items:flex-end;margin:10px 0}
+label.f{display:flex;flex-direction:column;gap:4px;font-size:12.5px;color:var(--muted);font-weight:500}
+input[type=text],input[type=number],textarea,select{font:500 14.5px/1.4 var(--f-mono);color:var(--ink);background:var(--paper);border:1px solid var(--line);border-radius:7px;padding:8px 10px;min-width:0}
+textarea{width:100%;resize:vertical;line-height:1.6}
+input[type=number]{width:96px}
+.btn{font:600 13.5px/1 var(--f-body);background:var(--c);color:var(--card);border:0;border-radius:7px;padding:10px 14px;cursor:pointer}
+.btn.ghost{background:transparent;color:var(--c);box-shadow:inset 0 0 0 1.5px var(--c)}
+.btn:disabled{opacity:.4;cursor:default}
+.chips{display:flex;flex-wrap:wrap;gap:6px;margin:8px 0}
+.chip{font:500 13px/1 var(--f-mono);background:var(--soft);color:var(--ink);border:1px solid var(--line);border-radius:999px;padding:6px 10px;cursor:pointer}
+.chip:hover{border-color:var(--c)}
+.out{margin-top:12px}
+.verdict{font-size:15.5px;background:var(--cs);border-radius:8px;padding:10px 14px;margin:10px 0}
+.bits{font:500 13.5px/1.9 var(--f-mono);overflow-x:auto;white-space:nowrap;background:var(--paper);border:1px solid var(--line);border-radius:8px;padding:8px 12px}
+.bits b{background:var(--gr-soft);color:var(--good);font-weight:600;border-radius:2px}
+.warn{color:var(--bad)}
+.stepper{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin:10px 0}
+.stepper .cap{flex:1 1 260px;font-size:14.5px;min-width:0}
+.stepper .ct{font:600 12px var(--f-mono);color:var(--muted)}
+
+/* diagrams */
+.fig{overflow-x:auto;background:var(--card);border:1px solid var(--line);border-radius:10px;padding:8px;margin:14px 0}
+.fig svg{display:block;width:100%;height:auto;min-width:560px}
+.fig.narrow svg{min-width:460px}
+svg .ln{stroke:var(--ink);stroke-width:1.6;fill:none}
+svg .ln2{stroke:var(--muted);stroke-width:1.2;fill:none;stroke-dasharray:4 4}
+svg .lnc{stroke:var(--c);stroke-width:2;fill:none}
+svg .lno{stroke:var(--or);stroke-width:2;fill:none}
+svg .lnb{stroke:var(--bad);stroke-width:2;fill:none}
+svg .lng{stroke:var(--gr);stroke-width:2.2;fill:none}
+svg .tx{fill:var(--ink);font:500 13px var(--f-body)}
+svg .txm{fill:var(--ink);font:500 12.5px var(--f-mono)}
+svg .mut{fill:var(--muted)}
+svg .sm{font-size:11.5px}
+svg .b{font-weight:700}
+svg .halo{paint-order:stroke;stroke:var(--card);stroke-width:5px;stroke-linejoin:round}
+svg .boxf{fill:var(--card);stroke:var(--ink);stroke-width:1.4}
+svg .zone{fill:var(--soft);stroke:var(--line);stroke-width:1}
+svg .node{fill:var(--cs);stroke:var(--c);stroke-width:2}
+svg .ah{fill:var(--ink)} svg .ahb{fill:var(--bad)} svg .aho{fill:var(--or)} svg .ahg{fill:var(--gr)} svg .ahc{fill:var(--c)}
+svg .chg{fill:var(--or);font-weight:700}
+svg .hide{opacity:0}
+svg [data-st]{transition:opacity .25s}
+svg .active-link{stroke:var(--or);stroke-width:3.2}
+
+/* flashcards */
+.fc-bar{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin:10px 0}
+.seg{display:inline-flex;border:1px solid var(--line);border-radius:8px;overflow:hidden}
+.seg button{font:500 13px var(--f-body);background:var(--card);color:var(--ink);border:0;padding:7px 12px;cursor:pointer}
+.seg button[aria-pressed="true"]{background:var(--c);color:var(--card)}
+.fc{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:10px}
+.card{position:relative;text-align:left;background:var(--card);border:1px solid var(--line);border-radius:10px;padding:12px 14px;cursor:pointer;font:inherit;color:inherit;min-height:112px;display:flex;flex-direction:column;gap:6px}
+.card .q{font-weight:600;font-size:14.5px;line-height:1.5}
+.card .a{font-size:14px;line-height:1.55;color:var(--ink);border-top:1px dashed var(--line);padding-top:6px}
+.card .t{font:600 10.5px/1 var(--f-disp);letter-spacing:.1em;color:var(--c)}
+.card[aria-expanded="false"] .a{display:none}
+.card[aria-expanded="false"]::after{content:"แตะเพื่อดูเฉลย";font-size:12px;color:var(--muted);margin-top:auto}
+
+/* matching */
+.mg-terms{display:flex;flex-wrap:wrap;gap:8px;margin:10px 0}
+.mg-term{font:600 13.5px/1 var(--f-body);background:var(--card);color:var(--ink);border:1.5px solid var(--line);border-radius:8px;padding:9px 12px;cursor:pointer}
+.mg-term[aria-pressed="true"]{border-color:var(--c);background:var(--cs)}
+.mg-defs{display:flex;flex-direction:column;gap:6px}
+.mg-def{text-align:left;font:400 14px/1.5 var(--f-body);background:var(--card);color:var(--ink);border:1px solid var(--line);border-radius:8px;padding:9px 12px;cursor:pointer}
+.mg-def:hover{border-color:var(--c)}
+.matched{opacity:.55;border-style:dashed!important;cursor:default!important}
+.matched::after{content:" ✓";color:var(--good)}
+.shake{animation:sh .35s}
+@keyframes sh{25%{transform:translateX(-4px)}75%{transform:translateX(4px)}}
+
+/* QoS belt */
+.belt{background:var(--card);border:1.5px solid var(--c);border-radius:12px;padding:14px;margin:16px 0;overflow:hidden}
+.stations{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:8px}
+.st{background:var(--cs);border-radius:8px;padding:10px;min-width:0}
+.st .no{font:700 20px/1 var(--f-disp);color:var(--c)}
+.st b{display:block;font:600 14px/1.3 var(--f-disp);margin:4px 0 2px}
+.st span{font-size:12.5px;line-height:1.45;color:var(--muted);display:block}
+.track{position:relative;height:38px;margin-top:12px;border-radius:6px;background:repeating-linear-gradient(90deg,var(--soft) 0 14px,var(--line) 14px 16px);overflow:hidden}
+.pk{position:absolute;top:9px;left:0;width:30px;height:20px;border-radius:4px;font:600 10px/20px var(--f-mono);text-align:center;color:#fff;animation:move 9s linear infinite}
+.pk.ef{background:var(--or)} .pk.af{background:var(--bl)} .pk.de{background:var(--muted)} .pk.dr{background:var(--bad);animation-name:drop}
+.pk:nth-child(1){animation-delay:0s}.pk:nth-child(2){animation-delay:-1.8s}.pk:nth-child(3){animation-delay:-3.6s}.pk:nth-child(4){animation-delay:-5.4s}.pk:nth-child(5){animation-delay:-7.2s}
+@keyframes move{from{left:-4%}to{left:100%}}
+@keyframes drop{0%{left:-4%;top:9px;opacity:1}62%{left:66%;top:9px;opacity:1}75%{left:68%;top:40px;opacity:0}100%{left:68%;top:40px;opacity:0}}
+@media (prefers-reduced-motion:reduce){.pk:nth-child(1){left:6%}.pk:nth-child(2){left:26%}.pk:nth-child(3){left:46%}.pk:nth-child(4){left:66%}.pk:nth-child(5){left:86%}}
+@media (max-width:700px){.stations{grid-template-columns:repeat(2,minmax(0,1fr))}.track{display:none}}
+
+details.qa{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:0;margin:8px 0}
+details.qa summary{cursor:pointer;padding:11px 14px;font-weight:600;list-style:none;display:grid;grid-template-columns:auto 1fr;gap:10px}
+details.qa summary::-webkit-details-marker{display:none}
+details.qa summary::before{content:"+";font:700 16px/1.3 var(--f-mono);color:var(--c)}
+details.qa[open] summary::before{content:"−"}
+details.qa .body{padding:0 14px 10px 38px;font-size:14.5px}
+
+.pics{display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:10px}
+.pic{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:10px;text-align:center}
+.pic svg{width:100%;height:110px}
+.pic details summary{cursor:pointer;font-size:13px;color:var(--muted)}
+.pic details[open] summary{color:var(--c);font-weight:600}
+.pic details p{margin:4px 0 0;font:600 14px var(--f-disp)}
+footer{margin-top:48px;padding-top:20px;border-top:1px solid var(--line);font-size:13px;color:var(--muted)}
+</style>
+</head><body>
+
+<div class="shell">
+<nav class="rail" aria-label="สารบัญ">
+  <p class="rail-title">ติวไฟนอล Network</p>
+  <p class="rail-sub">บท 17–32 · เรียงตามแนวข้อสอบ</p>
+  <ol id="railList">
+    <li><a href="#map" style="--wc:var(--ink)"><span class="w"></span>แผนที่ข้อสอบ<span class="ck"></span></a></li>
+    <li><a href="#q1" style="--wc:var(--ink)"><span class="w st"></span>ข้อ 1 · ปลายเปิด<span class="ck">✓</span></a></li>
+    <li class="grp">Network layer · IPv4</li>
+    <li><a href="#arp" style="--wc:var(--or)"><span class="w"></span>17 · ARP<span class="ck">✓</span></a></li>
+    <li><a href="#ip" style="--wc:var(--or)"><span class="w"></span>18 · IPv4, Subnet, ICMP<span class="ck">✓</span></a></li>
+    <li><a href="#nat" style="--wc:var(--or)"><span class="w"></span>19 · DHCP &amp; NAT<span class="ck">✓</span></a></li>
+    <li><a href="#routing" style="--wc:var(--or)"><span class="w"></span>20 · Routing Algorithms<span class="ck">✓</span></a></li>
+    <li><a href="#ripospf" style="--wc:var(--or)"><span class="w"></span>21 · RIP &amp; OSPF<span class="ck">✓</span></a></li>
+    <li><a href="#multicast" style="--wc:var(--or)"><span class="w"></span>22 · Broadcast/Multicast<span class="ck">✓</span></a></li>
+    <li class="grp">IPv6</li>
+    <li><a href="#ipv6" style="--wc:var(--gr)"><span class="w"></span>23–25 · IPv6<span class="ck">✓</span></a></li>
+    <li><a href="#q3" style="--wc:var(--gr)"><span class="w st"></span>ข้อ 3 · ท่องจำ v4/v6<span class="ck">✓</span></a></li>
+    <li class="grp">Transport</li>
+    <li><a href="#transport" style="--wc:var(--bl)"><span class="w"></span>26 · UDP &amp; TCP<span class="ck">✓</span></a></li>
+    <li><a href="#congestion" style="--wc:var(--bl)"><span class="w"></span>27 · Congestion &amp; RTT<span class="ck">✓</span></a></li>
+    <li class="grp">Application · QoS · Security</li>
+    <li><a href="#app" style="--wc:var(--br)"><span class="w"></span>28 · Application<span class="ck">✓</span></a></li>
+    <li><a href="#snmp" style="--wc:var(--br)"><span class="w"></span>29 · SNMP<span class="ck">✓</span></a></li>
+    <li><a href="#qos" style="--wc:var(--br)"><span class="w"></span>30–31 · QoS<span class="ck">✓</span></a></li>
+    <li><a href="#security" style="--wc:var(--br)"><span class="w"></span>32 · Security<span class="ck">✓</span></a></li>
+    <li><a href="#bonus" style="--wc:var(--ink)"><span class="w st"></span>ข้อ 9 + โบนัส<span class="ck">✓</span></a></li>
+  </ol>
+  <div class="prog"><span id="progText">อ่านแล้ว 0 จาก 15 หัวข้อ</span><div class="prog-bar"><i id="progBar"></i></div></div>
+</nav>
+
+<main>
+<!-- ================= HERO / MAP ================= -->
+<header class="hero" id="map">
+  <p class="eyebrow">Computer Network · Final · บทที่ 17–32</p>
+  <h1>ติวไฟนอล Network<span class="cable" aria-hidden="true"><i style="background:var(--or)"></i><i style="background:var(--gr)"></i><i style="background:var(--bl)"></i><i style="background:var(--br)"></i></span></h1>
+  <p class="lead">สรุปบท 17–32 จากหนังสือประกอบวิชา จัดเรียงตามแนวข้อสอบ 10+1 ข้อ ทุกหัวข้อที่ออกสอบมีตัวอย่างทำทีละขั้น และมีเครื่องมือให้ลองกรอกโจทย์เอง: routing table, subnet, NAT, Bellman-Ford, RTT/Timeout และกราฟ cwnd</p>
+  <div class="legend" aria-label="สีประจำหมวด">
+    <span><i style="background:var(--or)"></i>Network layer (IPv4)</span>
+    <span><i style="background:var(--gr)"></i>IPv6</span>
+    <span><i style="background:var(--bl)"></i>Transport</span>
+    <span><i style="background:var(--br)"></i>Application · QoS · Security</span>
+    <span>สีเรียงตามคู่สาย UTP มาตรฐาน T568B</span>
+  </div>
+  <div class="map">
+    <a class="tile" href="#q1" style="--wc:var(--ink)"><span class="n">1 <small>ปลายเปิด</small></span><b>IP บ้าน ≠ IP มหาวิทยาลัย</b><p>เข้า www.kku.ac.th ใช้ 5 โปรโตคอลอะไร · เช็กว่า host ปลายทางออนไลน์ได้ยังไง</p></a>
+    <a class="tile" href="#lpm" style="--wc:var(--or)"><span class="n">2 <small>บท 18</small></span><b>Routing table + incoming IP</b><p>IP นี้ตรงกับ entry ไหน ใช้เรื่อง subnet และ longest prefix match</p></a>
+    <a class="tile" href="#q3" style="--wc:var(--gr)"><span class="n">3 <small>10 × 1 คะแนน</small></span><b>ความรู้รอบตัว IPv4/IPv6</b><p>เน้นท่องจำ มีแฟลชการ์ด 34 ใบให้ทบทวน</p></a>
+    <a class="tile" href="#natdemo" style="--wc:var(--or)"><span class="n">4 <small>บท 19</small></span><b>NAT diagram + NAT table</b><p>เขียน IP ในแต่ละช่วง และกรอกตาราง inside / outside</p></a>
+    <a class="tile" href="#bf" style="--wc:var(--or)"><span class="n">5 <small>บท 20</small></span><b>Bellman-Ford</b><p>ปรับ routing table จากตารางที่ neighbor ส่งมา</p></a>
+    <a class="tile" href="#fastrx" style="--wc:var(--bl)"><span class="n">6 <small>บท 27</small></span><b>TCP Fast Retransmit</b><p>ได้ ACK 1+3 ครั้งแล้วส่งอะไรต่อ (มี diagram)</p></a>
+    <a class="tile" href="#cwnd" style="--wc:var(--bl)"><span class="n">7 <small>บท 27</small></span><b>กราฟ Slow Start + threshold</b><p>วาด cwnd ทีละรอบ เมื่อเกิด timeout หรือ 3 dup ACK</p></a>
+    <a class="tile" href="#tcpcases" style="--wc:var(--bl)"><span class="n">8 <small>บท 26–27</small></span><b>อธิบาย TCP กรณีต่าง ๆ</b><p>ไม่มี diagram ต้องเล่าเป็นคำพูดให้ครบ</p></a>
+    <a class="tile dim" href="#bonus" style="--wc:var(--muted)"><span class="n">9 <small>จำไม่ได้</small></span><b>ข้อที่ลืม</b><p>รวมหัวข้อที่ยังไม่ถูกถามแต่น่าจะออก</p></a>
+    <a class="tile" href="#rtt" style="--wc:var(--bl)"><span class="n">10 <small>บท 27</small></span><b>คำนวณ RTT, α → Timeout</b><p>EstimatedRTT, DevRTT, TimeoutInterval</p></a>
+    <a class="tile" href="#qos" style="--wc:var(--br)"><span class="n">11 <small>บท 30–31</small></span><b>จับคู่คำ + ขั้นตอน QoS</b><p>สายพาน classifier → meter → marker → shaper/dropper</p></a>
+    <a class="tile" href="#pics" style="--wc:var(--ink)"><span class="n">+ <small>โบนัส</small></span><b>เกมทายศัพท์จากรูป</b><p>รูปแปลก ๆ แทนศัพท์ network ลองเดาก่อนเปิดเฉลย</p></a>
+  </div>
+</header>
+
+<!-- ================= Q1 ================= -->
+<section class="ch t-ink" id="q1">
+  <div class="ch-top"><span class="ch-no">ข้อ 1 · หลายบทรวมกัน</span><a class="ex" href="#q1">ข้อสอบข้อ 1</a><button class="readbtn" data-id="q1" aria-pressed="false">อ่านแล้ว</button></div>
+  <h2>คำถามปลายเปิด 3 ประเด็น</h2>
+  <p class="sub">ข้อนี้ไม่มีคำตอบตายตัว คะแนนมาจากการใช้ศัพท์ให้ถูกและเล่าเป็นลำดับ ด้านล่างคือโครงคำตอบที่ครอบคลุม</p>
+
+  <h3>1.1 ทำไม IP ที่บ้านกับที่มหาวิทยาลัยไม่เหมือนกัน</h3>
+  <ol class="steps">
+    <li><div><b>IP บอกตำแหน่งในเครือข่าย</b> ส่วน network ของ IP ต้องตรงกับเครือข่ายที่ต่ออยู่ เมื่อย้ายไปต่อเครือข่ายอื่นจึงต้องได้ IP ใหม่ ส่วน MAC address ของการ์ดยังเป็นค่าเดิม</div></li>
+    <li><div><b>DHCP คนละตัว แจกจาก pool คนละชุด</b> ที่บ้าน router บ้านเป็น DHCP server ส่วนที่มหาวิทยาลัยใช้ DHCP server ของมหาวิทยาลัย IP ที่ได้มีอายุ (lease time) หมดแล้วอาจได้เลขใหม่</div></li>
+    <li><div><b>Private IP + NAT</b> IP ที่เครื่องเห็นมักเป็น private (เช่น 192.168.x.x หรือ 10.x.x.x) ใช้ซ้ำกันได้ในแต่ละองค์กร พอออกอินเทอร์เน็ต NAT แปลงเป็น public IP ของ ISP หรือของมหาวิทยาลัย ซึ่งก็ต่างกันอีก</div></li>
+  </ol>
+  <div class="tw"><table>
+    <tr><th>ค่าที่ได้ (ตัวอย่างสมมติ)</th><th>ที่บ้าน</th><th>ที่มหาวิทยาลัย</th></tr>
+    <tr><td>IP เครื่อง (private)</td><td class="m">192.168.1.35/24</td><td class="m">10.x.x.x/อื่น ๆ</td></tr>
+    <tr><td>Default gateway</td><td class="m">192.168.1.1 (router บ้าน)</td><td>router ของมหาวิทยาลัย</td></tr>
+    <tr><td>ใครแจก IP</td><td>DHCP ใน router บ้าน</td><td>DHCP server ของมหาวิทยาลัย</td></tr>
+    <tr><td>Public IP หลัง NAT</td><td>ของ ISP ที่บ้าน</td><td>ของเครือข่ายมหาวิทยาลัย</td></tr>
+  </table></div>
+
+  <h3>1.2 เข้า www.kku.ac.th ใช้โปรโตคอลอะไรบ้าง (5 ตัว)</h3>
+  <p>เล่าตามลำดับเวลาที่เกิดจริง จะได้ทั้งชื่อโปรโตคอลและเหตุผลว่าทำไมต้องใช้</p>
+  <ol class="steps">
+    <li><div><b>DHCP</b> <span class="m">UDP 67/68</span> · Discover → Offer → Request → ACK ได้ IP, subnet mask, default gateway และ DNS server</div></li>
+    <li><div><b>ARP</b> · หา MAC ของ default gateway (ARP query แบบ broadcast, reply แบบ unicast) เพราะปลายทางอยู่นอก LAN เฟรมต้องส่งไปที่ gateway ก่อน</div></li>
+    <li><div><b>DNS</b> <span class="m">UDP 53</span> · ถามว่า www.kku.ac.th มี IP อะไร (root → .th → ac.th → kku.ac.th)</div></li>
+    <li><div><b>TCP</b> <span class="m">พอร์ต 443 หรือ 80</span> · three-way handshake SYN → SYN+ACK → ACK เพื่อเปิดการเชื่อมต่อ</div></li>
+    <li><div><b>HTTP / HTTPS</b> · เบราว์เซอร์ส่ง <span class="m">GET /</span> เซิร์ฟเวอร์ตอบ <span class="m">200 OK</span> พร้อม HTML (HTTPS = HTTP ทับ TLS)</div></li>
+  </ol>
+  <div class="box key"><span class="tag">ตอบให้ได้คะแนนเต็ม</span><p>ทุกขั้นวิ่งบน <b>IP</b> (Network layer) และระหว่างทาง router ใช้ routing table หาเส้นทาง ส่วน NAT ที่ router บ้านแปลง private ↔ public ถ้าอาจารย์ไม่นับ ARP ให้ใส่ IP หรือ ICMP แทนได้ ถ้าเขียนลำดับ + port + หน้าที่ของแต่ละตัว จะครบทุกประเด็น</p></div>
+
+  <h3>1.3 จะรู้ได้อย่างไรว่า host ปลายทางออนไลน์อยู่</h3>
+  <div class="cards">
+    <div class="mini"><span class="k">ICMP</span><h4>ping</h4><p>ส่ง Echo Request (type 8) ได้ Echo Reply (type 0) แปลว่า host ทำงานและเส้นทางใช้ได้ ดู RTT และ TTL ได้ด้วย</p></div>
+    <div class="mini"><span class="k">ICMP + TTL</span><h4>traceroute / tracert</h4><p>ส่งแพ็กเก็ต TTL = 1, 2, 3 … router แต่ละ hop ตอบ Time Exceeded (type 11) เห็นว่าขาดที่ hop ไหน</p></div>
+    <div class="mini"><span class="k">TCP</span><h4>ทดสอบพอร์ต</h4><p><span class="m">telnet host 443</span>, <span class="m">nc -zv</span>, <span class="m">Test-NetConnection</span> ได้ SYN+ACK = บริการเปิด, ได้ RST = เครื่องเปิดแต่พอร์ตปิด</p></div>
+    <div class="mini"><span class="k">DNS</span><h4>nslookup / dig</h4><p>แยกปัญหาว่าชื่อ resolve ไม่ได้ หรือเครื่องปลายทางล่มจริง</p></div>
+    <div class="mini"><span class="k">ARP</span><h4>arp -a</h4><p>ใช้ได้เมื่ออยู่ LAN เดียวกัน ถ้ามี MAC ตอบกลับ แปลว่าเครื่องอยู่ใน LAN</p></div>
+    <div class="mini"><span class="k">Application</span><h4>curl / เบราว์เซอร์</h4><p>ดู HTTP status เช่น 200, 404, 503 ว่าแอปทำงานไหม ไม่ใช่แค่เครื่องเปิด</p></div>
+  </div>
+  <div class="box trap"><span class="tag">กับดัก</span><p>ping ไม่ตอบ ไม่ได้แปลว่าเครื่องดับเสมอ ไฟร์วอลล์มักบล็อก ICMP ไว้ ควรเขียนว่า "ใช้หลายวิธีประกอบกัน" เช่น ping ไม่ได้แต่ต่อพอร์ต 443 ได้ = host ออนไลน์</p></div>
+</section>
+
+<!-- ================= CH 17 ARP ================= -->
+<section class="ch t-or" id="arp">
+  <div class="ch-top"><span class="ch-no">บทที่ 17</span><button class="readbtn" data-id="arp" aria-pressed="false">อ่านแล้ว</button></div>
+  <h2>ARP และ RARP: แปลงระหว่าง IP กับ MAC</h2>
+  <div class="two">
+    <div class="box"><span class="tag">ARP</span><p><b>รู้ IP → หา MAC</b> (Layer 3 → Layer 2) กำหนดใน RFC 826 ส่งในเฟรม Ethernet โดยตรง <span class="m">Type = 0x0806</span></p><ul><li><b>ARP query</b> ส่งแบบ <b>broadcast</b> ช่อง Target MAC เป็น <span class="m">00:00:00:00:00:00</span></li><li><b>ARP response</b> ตอบแบบ <b>unicast</b> กลับหาผู้ถาม</li><li>ได้แล้วเก็บ <span class="m">&lt;IP, MAC&gt;</span> ใน ARP cache ดูด้วย <span class="kbd">arp -a</span></li></ul></div>
+    <div class="box"><span class="tag">RARP</span><p><b>รู้ MAC → ขอ IP</b> ใช้กับ diskless workstation Operation = 3 (request), 4 (reply)</p><ul><li>ทำงานที่ Data link ข้าม router ไม่ได้ ต้องมี RARP server ทุก subnet</li><li>admin ต้องจับคู่ MAC–IP เอง ไม่ใช่ autoconfiguration</li><li>จึงพัฒนาเป็น BOOTP แล้วเป็น <b>DHCP</b></li></ul></div>
+  </div>
+  <div class="tw"><table>
+    <tr><th>ฟิลด์ใน ARP</th><th>ค่า/ความหมาย</th></tr>
+    <tr><td>Hardware type</td><td>16 บิต, Ethernet = 1</td></tr>
+    <tr><td>Protocol type</td><td>16 บิต, IPv4 = <span class="m">0x0800</span></td></tr>
+    <tr><td>HW length / Protocol length</td><td>6 (MAC) / 4 (IPv4)</td></tr>
+    <tr><td>Operation</td><td>1 = request, 2 = reply (RARP: 3, 4)</td></tr>
+    <tr><td>Sender/Target HW &amp; protocol address</td><td>MAC และ IP ของผู้ส่งและเป้าหมาย</td></tr>
+  </table></div>
+  <div class="box"><span class="tag">ตัวอย่างจากหนังสือ</span><p>เครื่อง <span class="m">192.168.1.3</span> ping ไป <span class="m">192.168.1.33</span> ก่อน ping ตาราง <span class="kbd">arp -a</span> มีแค่ gateway <span class="m">192.168.1.1</span> หลัง ping มีเพิ่ม <span class="m">192.168.1.33 → 00-24-1d-1c-3f-f9 (dynamic)</span> เพราะเครื่องได้ ARP reply มาแล้วเก็บลง cache</p></div>
+  <div class="box trap"><span class="tag">กับดัก</span><p>ถ้าปลายทางอยู่<b>นอก subnet</b> เครื่องจะ ARP หา MAC ของ <b>default gateway</b> ไม่ใช่ MAC ของปลายทาง เพราะเฟรม Layer 2 ไปได้แค่ใน LAN</p></div>
+</section>
+
+<!-- ================= CH 18 ================= -->
+<section class="ch t-or" id="ip">
+  <div class="ch-top"><span class="ch-no">บทที่ 18</span><a class="ex" href="#lpm">ข้อสอบข้อ 2</a><a class="ex" href="#q3">ข้อ 3</a><button class="readbtn" data-id="ip" aria-pressed="false">อ่านแล้ว</button></div>
+  <h2>Network Layer: IPv4, Subnetting, CIDR และ ICMP</h2>
+
+  <h3>18.1 วิธีส่งข้อมูลในเครือข่าย</h3>
+  <div class="tw"><table>
+    <tr><th></th><th>Circuit switching</th><th>Packet: Connectionless (datagram)</th><th>Packet: Connection-oriented (virtual circuit)</th></tr>
+    <tr><td>ก่อนส่ง</td><td>จองเส้นทางทั้งเส้น</td><td>ส่งได้ทันที</td><td>ต้อง setup เส้นทางก่อน</td></tr>
+    <tr><td>เส้นทาง</td><td>เส้นเดียวตลอด</td><td>แต่ละแพ็กเก็ตอิสระ อาจคนละทาง</td><td>ทุกแพ็กเก็ตเส้นเดียวกัน</td></tr>
+    <tr><td>ลำดับ</td><td>ตามลำดับ</td><td>อาจมาไม่เรียง ปลายทางต้องเรียงใหม่</td><td>ตามลำดับ</td></tr>
+    <tr><td>ทรัพยากร</td><td>จองตลอด เปลือง</td><td>store-and-forward ใช้ร่วมกัน</td><td>จอง buffer/bandwidth รับประกัน QoS</td></tr>
+    <tr><td>ตัวอย่าง</td><td>โทรศัพท์บ้าน</td><td>IP</td><td>ATM, MPLS</td></tr>
+  </table></div>
+  <p><b>ATM</b> แบ่งข้อมูลเป็น cell ขนาด <b>53 ไบต์</b> (header 5 + payload 48) เพราะยุโรปอยากได้ 32 อเมริกาอยากได้ 64 จึงตกลงที่ (32+64)/2 = 48 ใช้ VPI/VCI ระบุ VPC/VCC สร้าง SVC ด้วยข้อความ SETUP → PROCEEDING → CONNECT → CONNECT ACK และปิดด้วย RELEASE ส่วน <b>MPLS</b> คือแนวคิด connection-oriented แบบ ATM ที่ใช้บน IP เพื่อทำ QoS</p>
+
+  <h3>18.2 เฮดเดอร์ IPv4</h3>
+  <div class="tw"><table>
+    <tr><th>ฟิลด์</th><th>ขนาด</th><th>สิ่งที่ต้องจำ</th></tr>
+    <tr><td>Version</td><td>4 บิต</td><td>IPv4 = 4</td></tr>
+    <tr><td>IHL (Header length)</td><td>4 บิต</td><td>หน่วย 4 ไบต์ → เฮดเดอร์ 20–60 ไบต์ (ปกติ 20)</td></tr>
+    <tr><td>DS / ECN</td><td>6 + 2 บิต</td><td>เดิมชื่อ ToS ปัจจุบัน 6 บิตแรกเป็น DSCP ใช้ทำ QoS, 2 บิตท้ายแจ้ง congestion</td></tr>
+    <tr><td>Total length</td><td>16 บิต</td><td>ความยาวทั้งดาต้าแกรม ≤ 65,535 ไบต์</td></tr>
+    <tr><td>Identification</td><td>16 บิต</td><td>ทุก fragment ของดาต้าแกรมเดียวกันใช้เลขเดียวกัน</td></tr>
+    <tr><td>Flags</td><td>3 บิต</td><td>DF (Don't Fragment), MF (More Fragments)</td></tr>
+    <tr><td>Fragment offset</td><td>13 บิต</td><td>ตำแหน่งข้อมูล หน่วย <b>8 ไบต์</b></td></tr>
+    <tr><td>TTL</td><td>8 บิต</td><td>ลด 1 ทุก hop ถึง 0 ทิ้ง กันวนลูป</td></tr>
+    <tr><td>Protocol</td><td>8 บิต</td><td>ICMP = 1, TCP = 6, UDP = 17</td></tr>
+    <tr><td>Header checksum</td><td>16 บิต</td><td>คำนวณใหม่ทุก hop เพราะ TTL เปลี่ยน</td></tr>
+    <tr><td>Source / Destination</td><td>32 บิต</td><td>IP ต้นทาง / ปลายทาง</td></tr>
+  </table></div>
+
+  <h4>Fragmentation ทำมือ</h4>
+  <p>ดาต้าแกรม 3000 ไบต์ (header 20 + data 2980) ผ่านเน็ตเวิร์ก MTU 1200 ไบต์ → data ต่อ fragment ได้ไม่เกิน 1180 แต่ต้องเป็น<b>ทวีคูณของ 8</b> จึงใช้ 1176</p>
+  <div class="tw"><table>
+    <tr><th>Fragment</th><th>ไบต์ของข้อมูล</th><th class="num">Offset (÷8)</th><th>MF</th><th>Total length</th></tr>
+    <tr><td>1</td><td class="m">0 – 1175</td><td class="num">0</td><td>1</td><td>1196</td></tr>
+    <tr><td>2</td><td class="m">1176 – 2351</td><td class="num">147</td><td>1</td><td>1196</td></tr>
+    <tr><td>3</td><td class="m">2352 – 2979</td><td class="num">294</td><td>0</td><td>648</td></tr>
+  </table></div>
+  <div class="box trap"><span class="tag">กับดัก</span><p>หนังสือยกตัวอย่างนี้แบบใช้ 1180 ไบต์และ offset 0, 147, 295 แต่ 1180 หาร 8 ไม่ลงตัว ตามกติกาจริงต้องลดเหลือ 1176 (offset 0, 147, 294) ถ้าเจอในข้อสอบให้แสดงเหตุผลเรื่องหาร 8 ไว้ด้วย ถ้า DF = 1 แต่ใหญ่เกิน MTU จะถูกทิ้งและตอบ ICMP Destination Unreachable</p></div>
+
+  <h3>18.3 คลาสและแอดเดรสพิเศษ</h3>
+  <div class="tw"><table>
+    <tr><th>คลาส</th><th>บิตนำหน้า</th><th>ไบต์แรก</th><th>Default mask</th><th class="num">โฮสต์/เน็ตเวิร์ก</th><th>ใช้ทำ</th></tr>
+    <tr><td>A</td><td class="m">0</td><td class="m">0–127</td><td class="m">255.0.0.0 /8</td><td class="num">2²⁴ − 2</td><td>องค์กรใหญ่</td></tr>
+    <tr><td>B</td><td class="m">10</td><td class="m">128–191</td><td class="m">255.255.0.0 /16</td><td class="num">2¹⁶ − 2</td><td>องค์กรกลาง</td></tr>
+    <tr><td>C</td><td class="m">110</td><td class="m">192–223</td><td class="m">255.255.255.0 /24</td><td class="num">254</td><td>องค์กรเล็ก</td></tr>
+    <tr><td>D</td><td class="m">1110</td><td class="m">224–239</td><td>–</td><td class="num">–</td><td>Multicast</td></tr>
+    <tr><td>E</td><td class="m">1111</td><td class="m">240–255</td><td>–</td><td class="num">–</td><td>สำรองไว้</td></tr>
+  </table></div>
+  <div class="cards">
+    <div class="mini"><span class="k">host bits = 0</span><h4>Network address</h4><p>เช่น 202.28.93.0 ใช้เรียกทั้งเน็ตเวิร์ก แจกให้เครื่องไม่ได้</p></div>
+    <div class="mini"><span class="k">host bits = 1</span><h4>Broadcast</h4><p>เช่น 202.28.93.255, 130.18.255.255 ส่งถึงทุกเครื่อง</p></div>
+    <div class="mini"><span class="k">127.0.0.0/8</span><h4>Loopback</h4><p>วนกลับในเครื่อง ไม่ลง Physical layer ใช้ทดสอบโปรแกรม</p></div>
+    <div class="mini"><span class="k">0.0.0.0</span><h4>This network/host</h4><p>ใช้ตอนยังไม่มี IP เช่น DHCP Discover</p></div>
+    <div class="mini"><span class="k">169.254.0.0/16</span><h4>Link-local</h4><p>ตั้งเองอัตโนมัติเมื่อหา DHCP ไม่เจอ</p></div>
+    <div class="mini"><span class="k">RFC 1918</span><h4>Private IP</h4><p class="m">10.0.0.0/8 · 172.16.0.0/12 · 192.168.0.0/16</p></div>
+  </div>
+
+  <h3>18.4 Subnetting</h3>
+  <p>ยืมบิตจากส่วน host มาเป็นส่วน subnet: <span class="m">&lt;network&gt;&lt;บิตที่ยืม&gt;&lt;host ที่เหลือ&gt;</span> บิต 1 ใน mask = ส่วนเน็ตเวิร์ก/ซับเน็ต บิต 0 = ส่วนโฮสต์</p>
+  <div class="box key"><span class="tag">สูตร</span><ul>
+    <li>จำนวน subnet = 2<sup>s</sup> (s = บิตที่ยืม)</li>
+    <li>โฮสต์ต่อ subnet = 2<sup>h</sup> − 2 (h = บิต host ที่เหลือ)</li>
+    <li>Block size = 256 − ค่า mask ในไบต์ที่ไม่ใช่ 255/0 เช่น /26 → 256 − 192 = 64 → subnet เริ่มที่ .0 .64 .128 .192</li>
+    <li>ตัวอย่างหนังสือ: 192.202.18.0/24 ยืม 1 บิต → mask 255.255.255.128 ได้ subnet 0 (.0–.127) และ subnet 1 (.128–.255)</li>
+  </ul></div>
+  <div class="box tool"><span class="tag">ลองคำนวณ</span>
+    <div class="row"><label class="f" for="sn-in">IP/prefix หรือ IP + mask<input type="text" id="sn-in" value="192.168.10.77/26" style="width:260px"></label><button class="btn" id="sn-go">คำนวณ</button></div>
+    <div class="chips" id="sn-chips"><button class="chip">192.168.10.77/26</button><button class="chip">172.16.47.9 255.255.240.0</button><button class="chip">10.20.30.40/12</button><button class="chip">202.28.93.200/27</button></div>
+    <div class="out" id="sn-out"></div>
+  </div>
+
+  <h3>18.5 CIDR และ Supernetting</h3>
+  <p>CIDR เลิกคิดเป็นคลาส ใช้ prefix length แทน (<span class="m">/n</span>) และรวมหลายเน็ตเวิร์กเป็น entry เดียว (supernetting / route aggregation) ลดปัญหา routing table explosion ตรงข้ามกับ subnetting ที่ทำให้ prefix ยาวขึ้น</p>
+  <div class="box"><span class="tag">ตัวอย่างหนังสือ</span>
+    <p>องค์กรได้ 192.12.240.0 ถึง 192.12.255.0 (16 คลาส C) ไบต์ที่ 3 คือ <span class="m">1111 0000</span> ถึง <span class="m">1111 1111</span> สี่บิตแรกคงที่ จึงรวมเป็น <b class="m">192.12.240.0/20</b> (mask 255.255.240.0) ประกาศ entry เดียว</p>
+    <p>ถ้า 192.12.250.0/24 ถูกให้องค์กรอื่นไป แพ็กเก็ตไป 192.12.250.8 จะตรงทั้ง /20 และ /24 router เลือก <b>/24 เพราะ prefix ยาวกว่า</b> (longest prefix match)</p>
+  </div>
+
+  <h3 id="lpm">18.6 เทียบ incoming IP กับ routing table <a class="ex" href="#lpm">ข้อ 2</a></h3>
+  <ol class="steps">
+    <li><div>เอา IP ปลายทาง <b>AND</b> กับ mask ของแต่ละ entry</div></li>
+    <li><div>ถ้าผลเท่ากับ network ของ entry นั้น = ตรง (match)</div></li>
+    <li><div>ถ้าตรงหลาย entry ให้เลือก <b>prefix ยาวที่สุด</b> (เจาะจงที่สุด)</div></li>
+    <li><div>ไม่ตรงเลย ใช้ default route <span class="m">0.0.0.0/0</span> ถ้าไม่มี default ให้ทิ้งแพ็กเก็ตและส่ง ICMP Destination Unreachable (type 3)</div></li>
+  </ol>
+  <div class="box key"><span class="tag">ทางลัดตอนสอบ</span><p>ไม่ต้องแปลงทั้ง 32 บิต ดูแค่ไบต์ที่ mask ไม่ใช่ 255 หรือ 0 เช่น entry 172.16.32.0/20 → ไบต์ที่ 3 mask = 240 block size 16 → ช่วง 32–47 ถ้า IP ไบต์ที่ 3 อยู่ใน 32–47 ก็ตรง</p></div>
+  <div class="box tool"><span class="tag">ลองเล่น · แก้ตารางได้</span>
+    <p class="sub" style="font-size:14px">พิมพ์ทีละบรรทัด ใช้ได้ทั้ง <span class="m">ip/len next-hop</span> และ <span class="m">ip mask next-hop</span></p>
+    <label class="f" for="lpm-table">Routing table</label>
+    <textarea id="lpm-table" rows="7">192.168.10.0/24      R1 (eth0)
+192.168.10.128/25    R2 (eth1)
+192.168.0.0/16       R3 (eth2)
+172.16.32.0 255.255.240.0   R4 (eth3)
+10.0.0.0/8           R5 (eth4)
+0.0.0.0/0            ISP (default)</textarea>
+    <div class="row"><label class="f" for="lpm-ip">IP ปลายทางของแพ็กเก็ต<input type="text" id="lpm-ip" value="192.168.10.200" style="width:200px"></label><button class="btn" id="lpm-go">หา entry</button><button class="btn ghost" id="lpm-rand">สุ่มโจทย์</button></div>
+    <div class="chips" id="lpm-chips"><button class="chip">192.168.10.200</button><button class="chip">192.168.10.77</button><button class="chip">192.168.77.5</button><button class="chip">172.16.47.9</button><button class="chip">172.16.48.1</button><button class="chip">8.8.8.8</button></div>
+    <div class="out" id="lpm-out"></div>
+  </div>
+
+  <h3>18.7 ICMP</h3>
+  <p>IP เป็นแบบ best-effort เมื่อส่งไม่ถึงจึงต้องมี ICMP แจ้งสาเหตุกลับไปหาต้นทาง และใช้ทดสอบเครือข่าย ICMP ห่ออยู่ใน IP (Protocol = 1) เฮดเดอร์มี <b>Type</b> (หมวดหลัก), <b>Code</b> (รายละเอียด) และ Checksum</p>
+  <div class="tw"><table>
+    <tr><th class="num">Type</th><th class="num">Code</th><th>ความหมาย</th><th>ใช้ตอน</th></tr>
+    <tr><td class="num">0</td><td class="num">0</td><td>Echo reply</td><td>ping ตอบกลับ</td></tr>
+    <tr><td class="num">3</td><td class="num">0–7</td><td>Destination unreachable (0 network, 1 host, 2 protocol, 3 port, 6/7 unknown)</td><td>ไม่มีเส้นทาง, หาโฮสต์ไม่เจอ</td></tr>
+    <tr><td class="num">4</td><td class="num">0</td><td>Source quench</td><td>ขอให้ลดความเร็ว (เลิกใช้แล้ว)</td></tr>
+    <tr><td class="num">5</td><td class="num">–</td><td>Redirect</td><td>บอกให้ไปใช้ gateway อื่น</td></tr>
+    <tr><td class="num">8</td><td class="num">0</td><td>Echo request</td><td>ping</td></tr>
+    <tr><td class="num">9 / 10</td><td class="num">0</td><td>Router advertisement / discovery</td><td>หา router</td></tr>
+    <tr><td class="num">11</td><td class="num">0</td><td>Time exceeded (TTL หมด)</td><td>traceroute</td></tr>
+    <tr><td class="num">12</td><td class="num">0</td><td>Parameter problem (bad IP header)</td><td>เฮดเดอร์ผิด</td></tr>
+    <tr><td class="num">13/14 · 17/18</td><td class="num">0</td><td>Timestamp · Address mask request/reply</td><td>วัดเวลา · ถาม subnet mask</td></tr>
+  </table></div>
+</section>
+
+<!-- ================= CH 19 ================= -->
+<section class="ch t-or" id="nat">
+  <div class="ch-top"><span class="ch-no">บทที่ 19</span><a class="ex" href="#natdemo">ข้อสอบข้อ 4</a><button class="readbtn" data-id="nat" aria-pressed="false">อ่านแล้ว</button></div>
+  <h2>DHCP และ NAT</h2>
+
+  <h3>19.1 DHCP แจก IP อัตโนมัติ</h3>
+  <p>ตั้ง IP เองเสี่ยงซ้ำ DHCP server จึงแจกให้พร้อม <b>lease time</b> หมดเวลาแล้วไม่ต่ออายุ (renew) IP จะกลับเข้า pool พัฒนาต่อจาก BOOTP ใช้พอร์ตเดียวกัน: <b>server 67, client 68 (UDP)</b></p>
+  <ol class="steps">
+    <li><div><b>DHCPDISCOVER</b> · client ยังไม่มี IP จึงใช้ src <span class="m">0.0.0.0</span> ส่ง broadcast ไป <span class="m">255.255.255.255</span></div></li>
+    <li><div><b>DHCPOFFER</b> · server เสนอ IP ในช่อง <i>Your IP address</i> เช่น 223.93.168.18</div></li>
+    <li><div><b>DHCPREQUEST</b> · client ขอ IP ที่ได้รับเสนอ (broadcast เพื่อให้ server อื่นรู้ด้วย)</div></li>
+    <li><div><b>DHCPACK</b> · server ยืนยัน ถ้าให้ไม่ได้ตอบ <b>DHCPNAK</b> แล้วเริ่มใหม่</div></li>
+  </ol>
+  <div class="two">
+    <div class="box"><span class="tag">ฟิลด์สำคัญ</span><ul><li>Opcode: 1 request, 2 reply</li><li>Transaction ID: client กำหนด ใช้จับคู่คำถาม-คำตอบ</li><li>Client IP / <b>Your IP</b> / Server IP / Gateway IP</li><li>Client hardware address (MAC)</li><li>Flags: บิตแรกบอกให้ตอบ unicast หรือ broadcast</li></ul></div>
+    <div class="box"><span class="tag">Options</span><ul><li>Option 1 = Subnet mask</li><li>Option 3 = Default router</li><li>Option 53 = DHCP message type: 1 DISCOVER, 2 OFFER, 3 REQUEST, 4 DECLINE, 5 ACK, 6 NAK, 7 RELEASE, 8 INFORM</li></ul></div>
+  </div>
+
+  <h3 id="natdemo">19.2 NAT แปลง private ↔ public <a class="ex" href="#natdemo">ข้อ 4</a></h3>
+  <p>ข้อดีของ NAT: ใช้ public IP เบอร์เดียวให้ทั้งองค์กร · เปลี่ยน IP ภายในได้โดยไม่กระทบภายนอก · เปลี่ยน ISP ได้โดยไม่ต้องแก้เครือข่ายภายใน · เครื่องภายในไม่ต้องมี IP ตายตัว NAT ทำงานด้วยตารางจับคู่ (IP:port ภายใน) ↔ (NAT IP:port ใหม่)</p>
+  <div class="box tool"><span class="tag">ดูทีละขั้น · ตัวอย่างหนังสือรูป 19.3</span>
+    <div class="fig"><svg id="natSvg" viewBox="0 0 760 360" role="img" aria-label="แผนภาพ NAT">
+      <defs>
+        <marker id="mA" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path class="ah" d="M0,0 L10,5 L0,10z"/></marker>
+      </defs>
+      <rect class="zone" x="10" y="10" width="290" height="222" rx="10"/>
+      <text class="tx b" x="24" y="34">Inside · private</text>
+      <rect class="zone" x="460" y="10" width="290" height="222" rx="10"/>
+      <text class="tx b" x="474" y="34">Outside · อินเทอร์เน็ต</text>
+      <line id="natL1" class="ln" x1="232" y1="78" x2="338" y2="112"/>
+      <line id="natL2" class="ln" x1="232" y1="170" x2="338" y2="134"/>
+      <line id="natL3" class="ln" x1="426" y1="122" x2="512" y2="122"/>
+      <rect class="boxf" x="36" y="52" width="196" height="54" rx="8"/>
+      <text class="tx b" x="50" y="74">PC A</text><text class="txm" x="50" y="95">192.168.0.1</text>
+      <rect class="boxf" x="36" y="144" width="196" height="54" rx="8"/>
+      <text class="tx b" x="50" y="166">PC B</text><text class="txm" x="50" y="187">192.168.0.2</text>
+      <circle class="node" cx="382" cy="122" r="44"/>
+      <text class="tx b" x="382" y="118" text-anchor="middle">NAT</text><text class="tx sm mut" x="382" y="136" text-anchor="middle">router</text>
+      <text class="txm sm" x="382" y="190" text-anchor="middle">in 192.168.0.254</text>
+      <text class="txm sm" x="382" y="208" text-anchor="middle">out 202.76.29.7</text>
+      <rect class="boxf" x="512" y="94" width="214" height="56" rx="8"/>
+      <text class="tx b" x="526" y="116">Web server</text><text class="txm" x="526" y="138">12.119.40.186</text>
+      <!-- packet slots -->
+      <rect class="boxf" x="10" y="248" width="340" height="102" rx="10"/>
+      <text class="tx sm mut" x="24" y="270">แพ็กเก็ตช่วง inside</text>
+      <text id="natInDir" class="tx sm b" x="336" y="270" text-anchor="end"></text>
+      <text class="txm" x="24" y="300">SRC</text><text id="natInSrc" class="txm" x="70" y="300">—</text>
+      <text class="txm" x="24" y="328">DST</text><text id="natInDst" class="txm" x="70" y="328">—</text>
+      <rect class="boxf" x="410" y="248" width="340" height="102" rx="10"/>
+      <text class="tx sm mut" x="424" y="270">แพ็กเก็ตช่วง outside</text>
+      <text id="natOutDir" class="tx sm b" x="736" y="270" text-anchor="end"></text>
+      <text class="txm" x="424" y="300">SRC</text><text id="natOutSrc" class="txm" x="470" y="300">—</text>
+      <text class="txm" x="424" y="328">DST</text><text id="natOutDst" class="txm" x="470" y="328">—</text>
+    </svg></div>
+    <div class="stepper"><button class="btn ghost" id="natPrev">ย้อน</button><button class="btn" id="natNext">ถัดไป</button><span class="ct" id="natCt"></span><span class="cap" id="natCap"></span></div>
+    <div class="tw"><table id="natTable">
+      <tr><th>Inside (private IP:port)</th><th>Outside (NAT IP:port)</th><th>ปลายทาง</th></tr>
+      <tr data-row="1"><td class="m">192.168.0.1:3345</td><td class="m">202.76.29.7:8001</td><td class="m">12.119.40.186:80</td></tr>
+      <tr data-row="2"><td class="m">192.168.0.2:3345</td><td class="m">202.76.29.7:8002</td><td class="m">12.119.40.186:80</td></tr>
+    </table></div>
+  </div>
+  <div class="box key"><span class="tag">ศัพท์ Inside/Outside (แบบ Cisco)</span>
+    <div class="tw" style="margin-top:0"><table>
+      <tr><th>คำ</th><th>ความหมาย</th><th>จากตัวอย่าง</th></tr>
+      <tr><td>Inside local</td><td>IP จริงของเครื่องภายใน (private)</td><td class="m">192.168.0.1</td></tr>
+      <tr><td>Inside global</td><td>IP ที่โลกภายนอกเห็นแทนเครื่องภายใน (public ของ NAT)</td><td class="m">202.76.29.7</td></tr>
+      <tr><td>Outside local</td><td>IP ของเครื่องภายนอกตามที่ฝั่งในเห็น</td><td class="m">12.119.40.186</td></tr>
+      <tr><td>Outside global</td><td>IP จริงของเครื่องภายนอก</td><td class="m">12.119.40.186</td></tr>
+    </table></div>
+    <p>จำง่าย: <b>inside/outside</b> = เครื่องอยู่ฝั่งไหน · <b>local/global</b> = มองจากฝั่งไหน</p>
+  </div>
+  <div class="cards">
+    <div class="mini"><span class="k">1 : 1</span><h4>Static NAT</h4><p>private 1 เบอร์ผูกกับ public 1 เบอร์ถาวร ใช้กับเซิร์ฟเวอร์ที่ต้องให้ภายนอกเข้าถึง</p></div>
+    <div class="mini"><span class="k">pool</span><h4>Dynamic NAT</h4><p>หยิบ public IP จาก pool ให้ใช้ชั่วคราว หมด pool ก็ออกไม่ได้</p></div>
+    <div class="mini"><span class="k">many : 1</span><h4>PAT / NAPT (overload)</h4><p>หลายเครื่องใช้ public IP เบอร์เดียว แยกกันด้วยหมายเลขพอร์ต แบบในตัวอย่างนี้</p></div>
+  </div>
+  <div class="box ans"><span class="tag">วิธีตอบข้อ 4</span><ol>
+    <li>เขียน IP ของทุกอินเทอร์เฟซลงในรูป: เครื่องภายใน, ขา inside ของ router, ขา outside ของ router, เซิร์ฟเวอร์</li>
+    <li>เขียนแพ็กเก็ต 4 ครั้ง: ขาออกก่อน NAT, ขาออกหลัง NAT (src เปลี่ยน), ขากลับก่อน NAT, ขากลับหลัง NAT (dst เปลี่ยน)</li>
+    <li>ขาออก NAT เปลี่ยน <b>source</b>, ขากลับ NAT เปลี่ยน <b>destination</b> ส่วนฝั่งเซิร์ฟเวอร์ไม่เปลี่ยน</li>
+    <li>กรอก NAT table: inside (private IP:port) ↔ outside (public IP:port)</li>
+  </ol></div>
+</section>
+
+<!-- ================= CH 20 ================= -->
+<section class="ch t-or" id="routing">
+  <div class="ch-top"><span class="ch-no">บทที่ 20</span><a class="ex" href="#bf">ข้อสอบข้อ 5</a><button class="readbtn" data-id="routing" aria-pressed="false">อ่านแล้ว</button></div>
+  <h2>Routing Algorithms</h2>
+  <p>ทุกอัลกอริทึมหาเส้นทาง cost ต่ำสุด โดย cost อาจแปรผันกับ 1/capacity, packet delay หรือ congestion</p>
+  <div class="tw"><table>
+    <tr><th>แบ่งตาม</th><th>แบบ</th><th>ความหมาย</th><th>ตัวอย่าง</th></tr>
+    <tr><td rowspan="2">ข้อมูลที่ใช้</td><td>Global (centralized)</td><td>รู้โทโพโลยีทั้งเครือข่าย</td><td>Link state (Dijkstra)</td></tr>
+    <tr><td>Decentralized</td><td>รู้แค่ neighbor แลกข้อมูลกันไปเรื่อย ๆ</td><td>Distance vector (Bellman-Ford)</td></tr>
+    <tr><td rowspan="2">การเปลี่ยนแปลง</td><td>Static</td><td>admin ใส่เอง เหมาะกับเครือข่ายเล็กที่ไม่ค่อยเปลี่ยน</td><td>Fixed, Source routing, Flooding</td></tr>
+    <tr><td>Dynamic (adaptive)</td><td>ปรับเองเมื่อ link ล่ม (failure) หรือแน่น (congestion)</td><td>RIP, OSPF</td></tr>
+  </table></div>
+  <div class="two">
+    <div class="box"><span class="tag">Flooding</span><p>ส่งต่อทุกขายกเว้นขาที่รับมา ไปถึงแน่ ไม่ต้องมี routing table ได้ทางสั้นสุดอัตโนมัติ แต่ทราฟฟิกท่วมและวนลูป จำกัดด้วย hop count หรือจำเลขแพ็กเก็ตที่เคย flood</p></div>
+    <div class="box"><span class="tag">Adaptive: ข้อเสีย</span><p>คำนวณซับซ้อน ต้องแลกข้อมูลเพิ่ม overhead และถ้าปรับเร็วเกินไปเกิด <b>oscillation</b> ช้าเกินไปเกิดลูป</p></div>
+  </div>
+
+  <h3>20.1 Bellman-Ford (Distance Vector)</h3>
+  <div class="box key"><span class="tag">สมการหลัก</span>
+    <p class="m" style="font-size:16px">D<sub>i</sub> = min<sub>j</sub> [ c<sub>ij</sub> + D<sub>j</sub> ] &nbsp;&nbsp;หรือ&nbsp;&nbsp; d<sub>x</sub>(y) = min<sub>v</sub> { c(x,v) + d<sub>v</sub>(y) }</p>
+    <p>ระยะจากฉันไปปลายทาง = ค่าลิงก์ไปเพื่อนบ้าน + ระยะที่เพื่อนบ้านบอกว่าไปถึง เลือกเพื่อนบ้านที่รวมแล้วน้อยสุด เริ่มต้น D<sub>d</sub> = 0, ตัวอื่น = ∞ แล้วทำซ้ำจนไม่มีอะไรเปลี่ยน</p>
+  </div>
+  <p>ตัวอย่างหนังสือรูป 20.1: หาเส้นทางจากทุกโนดไปโนด 6 คู่ (n, D) = (โนดถัดไป, cost) และ (−1, ∞) = ยังไม่รู้</p>
+  <div class="fig narrow"><svg viewBox="0 0 540 270" role="img" aria-label="กราฟ 6 โนดจากรูป 20.1">
+    <path class="ln" d="M60,135 L190,55"/><path class="ln" d="M60,135 L190,215"/><path class="ln" d="M60,135 Q190,300 330,215"/>
+    <path class="ln" d="M190,55 L190,215"/><path class="ln" d="M190,55 L330,55"/><path class="ln" d="M190,215 L330,55"/>
+    <path class="ln" d="M190,215 L330,215"/><path class="ln" d="M330,215 L470,135"/><path class="ln" d="M330,55 L470,135"/>
+    <g class="txm b"><text class="halo txm" x="116" y="86">3</text><text class="halo txm" x="112" y="196">2</text><text class="halo txm" x="200" y="262">5</text><text class="halo txm" x="176" y="140">1</text><text class="halo txm" x="256" y="46">4</text><text class="halo txm" x="250" y="128">3</text><text class="halo txm" x="256" y="208">2</text><text class="halo txm" x="404" y="196">2</text><text class="halo txm" x="404" y="86">3</text></g>
+    <g><circle class="node" cx="60" cy="135" r="20"/><text class="tx b" x="60" y="140" text-anchor="middle">1</text>
+    <circle class="node" cx="190" cy="55" r="20"/><text class="tx b" x="190" y="60" text-anchor="middle">2</text>
+    <circle class="node" cx="190" cy="215" r="20"/><text class="tx b" x="190" y="220" text-anchor="middle">4</text>
+    <circle class="node" cx="330" cy="55" r="20"/><text class="tx b" x="330" y="60" text-anchor="middle">5</text>
+    <circle class="node" cx="330" cy="215" r="20"/><text class="tx b" x="330" y="220" text-anchor="middle">3</text>
+    <circle class="node" cx="470" cy="135" r="22" style="stroke-width:3"/><text class="tx b" x="470" y="140" text-anchor="middle">6</text></g>
+    <text class="tx sm mut" x="470" y="178" text-anchor="middle">ปลายทาง</text>
+  </svg></div>
+  <div class="tw"><table>
+    <tr><th>รอบ</th><th>โนด 1</th><th>โนด 2</th><th>โนด 3</th><th>โนด 4</th><th>โนด 5</th></tr>
+    <tr><td>เริ่มต้น</td><td class="m">(−1, ∞)</td><td class="m">(−1, ∞)</td><td class="m">(−1, ∞)</td><td class="m">(−1, ∞)</td><td class="m">(−1, ∞)</td></tr>
+    <tr><td>1</td><td class="m">(−1, ∞)</td><td class="m">(−1, ∞)</td><td class="m"><mark>(6, 2)</mark></td><td class="m">(−1, ∞)</td><td class="m"><mark>(6, 3)</mark></td></tr>
+    <tr><td>2</td><td class="m"><mark>(3, 7)</mark></td><td class="m"><mark>(5, 7)</mark></td><td class="m">(6, 2)</td><td class="m"><mark>(3, 4)</mark></td><td class="m">(6, 3)</td></tr>
+    <tr><td>3</td><td class="m"><mark>(4, 6)</mark></td><td class="m"><mark>(4, 5)</mark></td><td class="m">(6, 2)</td><td class="m">(3, 4)</td><td class="m">(6, 3)</td></tr>
+  </table></div>
+  <p>รอบ 3 ของโนด 1: D<sub>1</sub> = min{ C<sub>12</sub>+D<sub>2</sub>, C<sub>13</sub>+D<sub>3</sub>, C<sub>14</sub>+D<sub>4</sub> } = min{ 3+7, 5+2, <b>2+4</b> } = 6 ผ่านโนด 4 · รอบที่ 4 ไม่มีอะไรเปลี่ยนจึงหยุด</p>
+
+  <h3 id="bf">20.2 ปรับ routing table จาก neighbor <a class="ex" href="#bf">ข้อ 5</a></h3>
+  <ol class="steps">
+    <li><div>เอาตารางที่ neighbor ส่งมา <b>บวก cost ของลิงก์</b> ไปหา neighbor ทุกแถว และตั้ง next hop = neighbor</div></li>
+    <li><div>ปลายทางที่ยังไม่มีในตารางเรา → <b>เพิ่ม</b></div></li>
+    <li><div>ถ้า next hop เดิมคือ neighbor ตัวนี้อยู่แล้ว → <b>แทนด้วยค่าใหม่เสมอ แม้จะแย่ลง</b> (เพราะเราพึ่งข้อมูลของเขา)</div></li>
+    <li><div>next hop คนละตัว: ค่าใหม่ <b>น้อยกว่า</b> → แทน, เท่ากันหรือมากกว่า → คงเดิม</div></li>
+  </ol>
+  <div class="box tool"><span class="tag">ลองเล่น · ตัวอย่างแบบ RIP (hop count)</span>
+    <div class="two" style="margin:6px 0">
+      <label class="f" for="bf-mine">ตารางเดิมของเรา (ปลายทาง cost next-hop)<textarea id="bf-mine" rows="6">Net1  7  B
+Net2  2  C
+Net6  8  F
+Net8  4  E
+Net9  4  F</textarea></label>
+      <label class="f" for="bf-nb">ตารางที่ neighbor ส่งมา (ปลายทาง cost)<textarea id="bf-nb" rows="6">Net2  4
+Net3  8
+Net6  4
+Net8  3
+Net9  5</textarea></label>
+    </div>
+    <div class="row"><label class="f" for="bf-name">ชื่อ neighbor<input type="text" id="bf-name" value="C" style="width:80px"></label><label class="f" for="bf-cost">cost ลิงก์ไป neighbor<input type="number" id="bf-cost" value="1" min="0"></label><label class="f" style="flex-direction:row;align-items:center;gap:6px;padding-bottom:8px"><input type="checkbox" id="bf-rip" checked> 16 = ∞ (RIP)</label><button class="btn" id="bf-go">อัปเดตตาราง</button></div>
+    <div class="out" id="bf-out"></div>
+  </div>
+
+  <h3>20.3 Count-to-infinity และวิธีแก้</h3>
+  <p>เมื่อ link ขาด ข่าวร้ายแพร่ช้า โนดต่าง ๆ เชื่อเส้นทางเก่าของกันและกันแล้วบวก cost ขึ้นทีละนิดไม่รู้จบ ตัวอย่างหนังสือ: เส้นตรง 1–2–3–4–5 ทุกลิงก์ cost 1 แล้วลิงก์ 1–2 ขาด (คู่ = next hop, cost ไปโนด 1)</p>
+  <div class="tw"><table>
+    <tr><th>รอบ</th><th>โนด 2</th><th>โนด 3</th><th>โนด 4</th><th>โนด 5</th></tr>
+    <tr><td>ก่อนขาด</td><td class="m">(1, 1)</td><td class="m">(2, 2)</td><td class="m">(3, 3)</td><td class="m">(4, 4)</td></tr>
+    <tr><td>1</td><td class="m"><mark>(3, 3)</mark></td><td class="m">(2, 2)</td><td class="m">(3, 3)</td><td class="m">(4, 4)</td></tr>
+    <tr><td>2</td><td class="m">(3, 3)</td><td class="m"><mark>(2, 4)</mark></td><td class="m">(3, 3)</td><td class="m">(4, 4)</td></tr>
+    <tr><td>3</td><td class="m"><mark>(3, 5)</mark></td><td class="m">(2, 4)</td><td class="m"><mark>(3, 5)</mark></td><td class="m">(4, 4)</td></tr>
+    <tr><td>4</td><td class="m">(3, 5)</td><td class="m"><mark>(2, 6)</mark></td><td class="m">(3, 5)</td><td class="m"><mark>(4, 6)</mark></td></tr>
+    <tr><td>…</td><td colspan="4">นับขึ้นไปเรื่อย ๆ จนถึง ∞ (RIP ตัดที่ 16)</td></tr>
+  </table></div>
+  <div class="cards">
+    <div class="mini"><span class="k">แก้ 1</span><h4>Split horizon</h4><p>ไม่ส่งเส้นทางกลับไปหาโนดที่เป็น next hop ของเส้นทางนั้น เช่นโนด 2 ไม่บอกเส้นทางไปโนด 1 ให้โนด 1</p></div>
+    <div class="mini"><span class="k">แก้ 2</span><h4>Split horizon + poison reverse</h4><p>ส่งกลับไปเหมือนกัน แต่ใส่ cost = ∞ (ส่ง "ยาพิษ") ให้อีกฝั่งตัดเส้นทางนี้ทันที</p></div>
+    <div class="mini"><span class="k">เสริม</span><h4>Max hop, hold-down, triggered update</h4><p>จำกัดที่ 16 · ช่วงพักไม่รับข่าวดีหลัง route เสีย · ส่งทันทีเมื่อเปลี่ยน ไม่รอ 30 วินาที</p></div>
+  </div>
+
+  <h3>20.4 Dijkstra (Link State)</h3>
+  <p>แต่ละ router ได้แผนที่ทั้งเครือข่ายจาก LSA ที่ flood มา แล้วคำนวณ shortest path tree จากตัวเองไปทุกโนด</p>
+  <ol class="steps">
+    <li><div>เริ่ม N' = {ตัวเอง}, D(v) = c(ตัวเอง,v) ถ้าติดกัน ไม่ติดกัน = ∞</div></li>
+    <li><div>เลือกโนด w ที่ไม่อยู่ใน N' และ D(w) น้อยสุด ใส่ลง N'</div></li>
+    <li><div>อัปเดตเพื่อนบ้าน v ของ w: D(v) = min( D(v), D(w) + c(w,v) ) จำ p(v) = โนดก่อนหน้า</div></li>
+    <li><div>ทำซ้ำจนทุกโนดอยู่ใน N'</div></li>
+  </ol>
+  <div class="tw"><table>
+    <tr><th></th><th>Distance vector (Bellman-Ford)</th><th>Link state (Dijkstra)</th></tr>
+    <tr><td>รู้อะไร</td><td>เฉพาะ neighbor</td><td>โทโพโลยีทั้งหมด</td></tr>
+    <tr><td>ส่งอะไร ให้ใคร</td><td>ทั้งตาราง ให้ neighbor</td><td>สถานะลิงก์ของตัวเอง flood ให้ทุกคน</td></tr>
+    <tr><td>ความเร็วลู่เข้า</td><td>ช้า มี count-to-infinity</td><td>เร็ว</td></tr>
+    <tr><td>ภาระ</td><td>คำนวณน้อย</td><td>หน่วยความจำ + CPU มากกว่า</td></tr>
+    <tr><td>โปรโตคอล</td><td>RIP</td><td>OSPF</td></tr>
+  </table></div>
+</section>
+
+<!-- ================= CH 21 ================= -->
+<section class="ch t-or" id="ripospf">
+  <div class="ch-top"><span class="ch-no">บทที่ 21</span><button class="readbtn" data-id="ripospf" aria-pressed="false">อ่านแล้ว</button></div>
+  <h2>Interior Routing: RIP และ OSPF</h2>
+  <p>ใน Autonomous System (AS) เดียวกันใช้ interior protocol (IGP) เช่น RIP, OSPF ส่วนระหว่าง AS ใช้ BGP (path vector)</p>
+  <div class="tw"><table>
+    <tr><th></th><th>RIP</th><th>OSPF</th></tr>
+    <tr><td>อัลกอริทึม</td><td>Distance vector (Bellman-Ford)</td><td>Link state (Dijkstra / SPF)</td></tr>
+    <tr><td>Metric</td><td>hop count 1–15, <b>16 = ∞</b></td><td>cost (ตั้งจาก bandwidth)</td></tr>
+    <tr><td>ส่งอะไร</td><td>ทั้ง routing table ให้ neighbor ทุก <b>30 วินาที</b></td><td>LSA flood ทั้ง area เมื่อมีการเปลี่ยน + Hello ตรวจ neighbor</td></tr>
+    <tr><td>ขนส่งด้วย</td><td><b>UDP 520</b> (ตัวโปรเซสชื่อ routed)</td><td>IP โดยตรง protocol 89</td></tr>
+    <tr><td>Multicast</td><td>RIPv2 ใช้ 224.0.0.9</td><td>224.0.0.5 (ทุก OSPF router), 224.0.0.6 (DR)</td></tr>
+    <tr><td>ขนาดเครือข่าย</td><td>เล็ก (บ้าน, สำนักงาน)</td><td>ใหญ่ แบ่ง area ได้</td></tr>
+    <tr><td>ข้อเสีย</td><td>ลู่เข้าช้า count-to-infinity</td><td>ซับซ้อน ใช้ทรัพยากรมาก</td></tr>
+  </table></div>
+  <div class="two">
+    <div class="box"><span class="tag">RIP timers</span><ul><li>Update (autoupdate) 30 s</li><li>Route expiration / invalid 180 s → ตั้ง metric เป็น 16</li><li>Garbage collection / flush อีก 60 s แล้วลบทิ้ง (รวม 240 s)</li><li>Triggered update: ส่งเฉพาะที่เปลี่ยนทันที</li><li>Command: 1 = request, 2 = response</li></ul></div>
+    <div class="box"><span class="tag">RIPv1 → RIPv2</span><ul><li>v2 เพิ่ม <b>subnet mask</b> → รองรับ VLSM/CIDR (v1 เป็น classful)</li><li>v2 เพิ่ม <b>next hop</b> และ route tag</li><li>v2 ส่ง multicast 224.0.0.9 แทน broadcast</li><li>v2 มี <b>authentication</b> (คีย์ 128 บิต เหลือ 24 entry ต่อข้อความ)</li><li>ข้อความหนึ่งมีได้ 25 entry, AFI = 2 สำหรับ IP</li></ul></div>
+  </div>
+  <h3>OSPF ทำงานอย่างไร</h3>
+  <ol class="steps">
+    <li><div>ส่ง <b>Hello</b> หา neighbor และรักษาความสัมพันธ์</div></li>
+    <li><div>สร้าง LSA บอกสถานะลิงก์ของตัวเอง แล้ว <b>flood</b> ให้ทุก router ใน area (LS Update / LS Ack)</div></li>
+    <li><div>ทุก router มี <b>link-state database</b> เหมือนกัน</div></li>
+    <li><div>รัน <b>Dijkstra</b> หา shortest path tree ได้ routing table</div></li>
+  </ol>
+  <div class="box key"><span class="tag">ทำไมต้องแบ่ง Area</span><p>จำกัดขอบเขตการ flood LSA, database เล็กลง, คำนวณ SPF เร็วขึ้น, ซ่อนโทโพโลยีระหว่าง area ทุก area ต้องต่อกับ <b>backbone area 0</b> ผ่าน <b>Area Border Router (ABR)</b> ส่วน router ที่ต่อกับ AS อื่นเรียก AS Boundary Router (ASBR) ประเภท LSA ที่เห็นใน lab: Router LSA (1), Network LSA (2), Summary LSA (3) ที่ ABR สร้าง</p></div>
+  <p>บน IPv6 ใช้ <b>RIPng</b> (UDP 521, multicast FF02::9) และ <b>OSPFv3</b> ซึ่งเปลี่ยนจากเดิมน้อยมาก ใช้ link-local address และ database ของ v4/v6 แยกกัน</p>
+</section>
+
+<!-- ================= CH 22 ================= -->
+<section class="ch t-or" id="multicast">
+  <div class="ch-top"><span class="ch-no">บทที่ 22</span><button class="readbtn" data-id="multicast" aria-pressed="false">อ่านแล้ว</button></div>
+  <h2>Broadcast และ Multicast Routing</h2>
+  <p>Unicast = 1:1 · Broadcast = 1:ทุกคน · Multicast = 1:กลุ่ม ปลายทางเป็น class D (224–239) ผู้ส่งเป็น unicast address ปกติ</p>
+  <div class="tw"><table>
+    <tr><th>เทคนิค</th><th>ทำงานอย่างไร</th><th>แก้ปัญหาอะไร</th></tr>
+    <tr><td>Flooding</td><td>ส่งทุกขา</td><td>ง่ายแต่ซ้ำและวนลูป</td></tr>
+    <tr><td><b>RPF</b> (Reverse Path Forwarding)</td><td>รับแพ็กเก็ตจาก S เฉพาะเมื่อมาทางขาที่เป็น shortest path กลับไปหา S แล้วส่งต่อทุกขาที่เหลือ</td><td>ตัดลูป แต่บาง LAN ยังได้ซ้ำ</td></tr>
+    <tr><td><b>RPB</b> (Reverse Path Broadcasting)</td><td>เลือก router เดียวเป็นผู้ส่งต่อให้แต่ละเน็ตเวิร์ก (parent ของ S)</td><td>ตัดแพ็กเก็ตซ้ำ</td></tr>
+    <tr><td><b>RPM</b> (Reverse Path Multicasting)</td><td>เพิ่ม <b>prune</b> ตัดกิ่งที่ไม่มีสมาชิก และ <b>graft</b> ต่อกลับเมื่อมีคนอยากรับ</td><td>ไม่ส่งไปที่ไม่มีใครฟัง</td></tr>
+  </table></div>
+  <div class="two">
+    <div class="box"><span class="tag">Source-Based Tree (SBT)</span><p>สร้าง tree แยกตามผู้ส่งแต่ละราย ผู้ส่งเป็น root ถ้ามี m กลุ่ม กลุ่มละ n ผู้ส่ง ต้องมี <b>m × n</b> tree เส้นทางสั้นสุดแต่เปลือง state</p><p>โปรโตคอล: DVMRP, MOSPF, PIM-DM</p></div>
+    <div class="box"><span class="tag">Group-Shared Tree (GST)</span><p>แต่ละกลุ่มเลือก router หนึ่งเป็น <b>core / rendezvous point</b> ทุกคนส่งไปที่ core ให้กระจายต่อ มีแค่ <b>m</b> tree ประหยัดแต่อาจอ้อม</p><p>โปรโตคอล: CBT, PIM-SM</p></div>
+  </div>
+  <h3>IGMP: บอก router ว่าในซับเน็ตมีใครอยากรับกลุ่มไหน</h3>
+  <ul>
+    <li>Router ส่ง query ไปที่ <span class="m">224.0.0.1</span> (ทุกโฮสต์) โฮสต์ตอบ report ด้วยกลุ่มที่ตัวเองเป็นสมาชิก router รู้แค่ว่ามีสมาชิกอย่างน้อย 1 ไม่รู้จำนวน</li>
+    <li><b>IGMPv1</b> มีแค่ join ไม่มี leave router ต้องรอ timeout เอง</li>
+    <li><b>IGMPv2</b> เพิ่ม <b>leave</b> message</li>
+    <li><b>IGMPv3</b> เลือกได้ว่าจะรับจาก source ไหน (source filtering)</li>
+  </ul>
+  <div class="cards">
+    <div class="mini"><span class="k">SBT · DV</span><h4>DVMRP</h4><p>RPF + prune/graft คำนวณ reverse path แบบ distance vector คล้าย RIP, soft state</p></div>
+    <div class="mini"><span class="k">SBT · LS</span><h4>MOSPF</h4><p>ต่อยอด OSPF ใส่ข้อมูลสมาชิกกลุ่มใน LSA แล้วคำนวณ tree ด้วย Dijkstra</p></div>
+    <div class="mini"><span class="k">GST</span><h4>CBT</h4><p>tree เดียวต่อกลุ่ม มี core router เป็นศูนย์กลาง</p></div>
+    <div class="mini"><span class="k">Dense / Sparse</span><h4>PIM-DM / PIM-SM</h4><p>DM: สมาชิกหนาแน่น flood แล้ว prune · SM: สมาชิกกระจาย ใช้ shared tree ผ่าน RP</p></div>
+  </div>
+  <p>ถ้าระหว่างทางมี router ที่ไม่รองรับ multicast ใช้ <b>tunneling</b> ห่อ multicast ใน unicast ข้ามไป</p>
+</section>
+
+<!-- ================= IPv6 ================= -->
+<section class="ch t-gr" id="ipv6">
+  <div class="ch-top"><span class="ch-no">บทที่ 23–25</span><a class="ex" href="#q3">ข้อสอบข้อ 3</a><button class="readbtn" data-id="ipv6" aria-pressed="false">อ่านแล้ว</button></div>
+  <h2>IPv6: แอดเดรส เฮดเดอร์ และโปรโตคอลรอบตัว</h2>
+  <div class="cards">
+    <div class="mini"><span class="k">ข้อดี 1</span><h4>แอดเดรส 128 บิต</h4><p>2¹²⁸ แอดเดรส พอสำหรับทุกอุปกรณ์</p></div>
+    <div class="mini"><span class="k">ข้อดี 2</span><h4>Stateless autoconfiguration</h4><p>สร้าง IP เองจาก prefix ที่ router ประกาศ + interface ID ไม่ต้องมี DHCP</p></div>
+    <div class="mini"><span class="k">ข้อดี 3</span><h4>Renumbering ง่าย</h4><p>แอดเดรสเก่าเป็น deprecated ใช้จนจบ session แล้วค่อยย้ายไปเลขใหม่</p></div>
+    <div class="mini"><span class="k">ข้อดี 4</span><h4>ประมวลผลเร็ว</h4><p>เฮดเดอร์คงที่ 40 ไบต์ ไม่มี checksum router ไม่แบ่ง fragment ใช้ multicast แทน broadcast</p></div>
+  </div>
+
+  <h3>เฮดเดอร์ IPv6 (40 ไบต์คงที่)</h3>
+  <div class="tw"><table>
+    <tr><th>ฟิลด์</th><th class="num">บิต</th><th>หน้าที่</th><th>เทียบ IPv4</th></tr>
+    <tr><td>Version</td><td class="num">4</td><td>= 6</td><td>Version</td></tr>
+    <tr><td>Traffic class</td><td class="num">8</td><td>ลำดับความสำคัญ / DSCP</td><td>ToS / DS</td></tr>
+    <tr><td>Flow label</td><td class="num">20</td><td>ระบุ flow เพื่อทำ QoS</td><td>ไม่มี</td></tr>
+    <tr><td>Payload length</td><td class="num">16</td><td>ความยาวหลังเฮดเดอร์หลัก</td><td>Total length</td></tr>
+    <tr><td>Next header</td><td class="num">8</td><td>ชนิด extension header หรือ TCP/UDP ถัดไป</td><td>Protocol</td></tr>
+    <tr><td>Hop limit</td><td class="num">8</td><td>ลดทีละ 1 ทุก hop</td><td>TTL</td></tr>
+    <tr><td>Source / Destination</td><td class="num">128 + 128</td><td>แอดเดรส</td><td>32 + 32</td></tr>
+  </table></div>
+  <div class="tw"><table>
+    <tr><th>เรื่อง</th><th>IPv4</th><th>IPv6</th></tr>
+    <tr><td>ขนาดแอดเดรส</td><td>32 บิต</td><td>128 บิต</td></tr>
+    <tr><td>เฮดเดอร์</td><td>20–60 ไบต์ มี options</td><td>40 ไบต์คงที่ + extension headers</td></tr>
+    <tr><td>Checksum ในเฮดเดอร์</td><td>มี</td><td>ไม่มี (พึ่ง L2/L4)</td></tr>
+    <tr><td>Fragmentation</td><td>ต้นทางและ router</td><td>ต้นทางเท่านั้น (Fragment header) router ส่ง ICMPv6 Packet Too Big</td></tr>
+    <tr><td>Broadcast</td><td>มี</td><td>ไม่มี ใช้ multicast</td></tr>
+    <tr><td>หา MAC</td><td>ARP</td><td>Neighbor Discovery (ICMPv6)</td></tr>
+    <tr><td>ตั้งค่า IP</td><td>มือ / DHCP</td><td>SLAAC / DHCPv6</td></tr>
+    <tr><td>IPsec</td><td>ทางเลือก</td><td>ออกแบบมาในตัว (AH/ESP เป็น extension)</td></tr>
+  </table></div>
+
+  <h3>การเขียนและย่อแอดเดรส</h3>
+  <ul>
+    <li>8 กลุ่ม กลุ่มละ 16 บิต เลขฐาน 16 คั่นด้วย <span class="m">:</span></li>
+    <li>ตัด 0 นำหน้าในแต่ละกลุ่มได้: <span class="m">0008 → 8</span>, <span class="m">0800 → 800</span></li>
+    <li>ใช้ <span class="m">::</span> แทนกลุ่ม 0 ที่ติดกันได้ <b>ครั้งเดียว</b>: <span class="m">8010:0:0:0:8:800:200A:1235 → 8010::8:800:200A:1235</span></li>
+    <li>เขียน IPv4 ต่อท้ายได้: <span class="m">::10.0.0.1</span></li>
+    <li>ระบุ prefix ด้วย <span class="m">/n</span> เช่น <span class="m">FEDC:BA98:0:76::/64</span> ระวัง <span class="m">FEDC:BA98::0076/64</span> แปลว่าคนละเน็ตเวิร์ก</li>
+  </ul>
+  <div class="box tool"><span class="tag">ลองเล่น · ขยาย/ย่อแอดเดรส</span>
+    <div class="row"><label class="f" for="v6-in">IPv6 address<input type="text" id="v6-in" value="FE80:0000:0000:0000:020A:95FF:FEF5:E96E" style="width:min(420px,78vw)"></label><button class="btn" id="v6-go">แปลง</button></div>
+    <div class="chips" id="v6-chips"><button class="chip">2001:0DB8:0000:0000:0008:0800:200C:417A</button><button class="chip">FF02::1</button><button class="chip">::1</button><button class="chip">::FFFF:192.168.1.10</button><button class="chip">0:0:0:AABB:1236:0:0:0</button></div>
+    <div class="out" id="v6-out"></div>
+  </div>
+
+  <h3>ประเภทแอดเดรส</h3>
+  <p>มี 3 แบบ: <b>Unicast</b> (อินเทอร์เฟซเดียว), <b>Multicast</b> (ทุกสมาชิกในกลุ่ม), <b>Anycast</b> (สมาชิกในกลุ่มที่<b>ใกล้ที่สุดตัวเดียว</b> ใช้กับ router เท่านั้นและใช้เป็น source ไม่ได้) และ <b>ไม่มี broadcast</b></p>
+  <div class="tw"><table>
+    <tr><th>Prefix</th><th>ชนิด</th><th>เทียบ IPv4</th></tr>
+    <tr><td class="m">::/128</td><td>Unspecified (ยังไม่มีแอดเดรส)</td><td class="m">0.0.0.0</td></tr>
+    <tr><td class="m">::1/128</td><td>Loopback</td><td class="m">127.0.0.1</td></tr>
+    <tr><td class="m">2000::/3</td><td>Global unicast (2000:: – 3FFF:…)</td><td>public IP</td></tr>
+    <tr><td class="m">FE80::/10</td><td>Link-local (ใช้ใน link เดียว, autoconfig, ND)</td><td class="m">169.254.0.0/16</td></tr>
+    <tr><td class="m">FC00::/7</td><td>Unique local (ใช้ภายในองค์กร)</td><td>private IP</td></tr>
+    <tr><td class="m">FF00::/8</td><td>Multicast (FF02::1 ทุกโนด, FF02::2 ทุก router)</td><td class="m">224.0.0.0/4</td></tr>
+    <tr><td class="m">::FFFF:a.b.c.d</td><td>IPv4-mapped (คุยกับโฮสต์ IPv4 ผ่าน dual stack / translation)</td><td>–</td></tr>
+    <tr><td class="m">::a.b.c.d</td><td>IPv4-compatible (ใช้ tunnel ผ่าน IPv4)</td><td>–</td></tr>
+  </table></div>
+  <p><b>Global unicast</b> แบ่งเป็น 48 บิต global routing prefix (3 บิตแรก = 001) + <b>16 บิต subnet ID</b> (แบ่งได้ 2¹⁶ ซับเน็ต) + <b>64 บิต interface ID</b> · <b>Multicast</b> ขึ้นต้น FF ตามด้วย flags 4 บิต (บิต T = ชั่วคราว) และ scope 4 บิต</p>
+
+  <h3>EUI-64: สร้าง interface ID จาก MAC</h3>
+  <ol class="steps">
+    <li><div>แบ่ง MAC 48 บิตเป็น OUI 24 บิต | 24 บิตของผู้ผลิต</div></li>
+    <li><div>แทรก <span class="m">FFFE</span> ตรงกลาง ได้ 64 บิต</div></li>
+    <li><div>กลับบิต Universal/Local (บิตที่ 7 จากซ้ายของไบต์แรก) = modified EUI-64 เช่น <span class="m">00 → 02</span></div></li>
+    <li><div>ต่อท้าย prefix /64</div></li>
+  </ol>
+  <div class="box tool"><span class="tag">ลองเล่น · ตัวอย่างหนังสือ 23.1</span>
+    <div class="row"><label class="f" for="eui-mac">MAC address<input type="text" id="eui-mac" value="00:0A:95:F5:E9:6E" style="width:200px"></label><label class="f" for="eui-pre">Prefix /64<input type="text" id="eui-pre" value="1001:0DB9:0031:0001::/64" style="width:240px"></label><button class="btn" id="eui-go">สร้างแอดเดรส</button></div>
+    <div class="out" id="eui-out"></div>
+  </div>
+
+  <h3>Extension headers (บทที่ 24)</h3>
+  <p>แทรกระหว่างเฮดเดอร์หลักกับ payload ร้อยต่อกันด้วยฟิลด์ Next header เฮดเดอร์หลักจึงเล็กและ router ไม่ต้องอ่าน option ที่ไม่เกี่ยว ลำดับที่แนะนำ:</p>
+  <div class="tw"><table>
+    <tr><th class="num">ลำดับ</th><th>Extension header</th><th class="num">Next header</th><th>ใช้ทำ</th></tr>
+    <tr><td class="num">1</td><td>Hop-by-Hop options</td><td class="num">0</td><td>ทุก router ต้องอ่าน (ตัวเดียวที่ router อ่าน) เช่น jumbogram</td></tr>
+    <tr><td class="num">2</td><td>Destination options</td><td class="num">60</td><td>สำหรับปลายทางระหว่างทางใน routing header</td></tr>
+    <tr><td class="num">3</td><td>Routing</td><td class="num">43</td><td>source routing ระบุ router ที่ต้องผ่าน</td></tr>
+    <tr><td class="num">4</td><td>Fragment</td><td class="num">44</td><td>ต้นทางแบ่งแพ็กเก็ต (offset, M flag, ID)</td></tr>
+    <tr><td class="num">5</td><td>Authentication (AH)</td><td class="num">51</td><td>ยืนยันตัวตน + integrity</td></tr>
+    <tr><td class="num">6</td><td>ESP</td><td class="num">50</td><td>เข้ารหัส</td></tr>
+    <tr><td class="num">7</td><td>Destination options</td><td class="num">60</td><td>สำหรับปลายทางสุดท้าย</td></tr>
+    <tr><td class="num">–</td><td>TCP / UDP / ICMPv6 / No next header</td><td class="num">6 / 17 / 58 / 59</td><td>ชั้นบน หรือไม่มีอะไรต่อ</td></tr>
+  </table></div>
+
+  <h3>ICMPv6, Neighbor Discovery และ SLAAC (บทที่ 25)</h3>
+  <div class="two">
+    <div class="box"><span class="tag">ICMPv6 messages</span><ul><li>Error: 1 Destination unreachable, <b>2 Packet too big</b>, 3 Time exceeded, 4 Parameter problem</li><li>Info: 128 Echo request, 129 Echo reply</li><li>Neighbor Discovery: <b>133 RS</b>, <b>134 RA</b>, <b>135 NS</b>, <b>136 NA</b>, 137 Redirect</li><li>MLD ใช้แทน IGMP</li></ul></div>
+    <div class="box"><span class="tag">Neighbor Discovery แทน</span><ul><li><b>ARP</b> → NS/NA (ถาม/ตอบ MAC ผ่าน multicast ไม่ใช่ broadcast)</li><li><b>ICMP router discovery</b> → RS/RA</li><li><b>ICMP redirect</b> → Redirect</li><li>ใช้ทำ Duplicate Address Detection (DAD)</li></ul></div>
+  </div>
+  <ol class="steps">
+    <li><div>สร้าง link-local <span class="m">FE80::/64 + interface ID</span> ด้วยตัวเอง</div></li>
+    <li><div>DAD: ส่ง NS ถามว่ามีใครใช้แอดเดรสนี้หรือยัง ถ้าไม่มีคนตอบก็ใช้ได้</div></li>
+    <li><div>ส่ง <b>Router Solicitation</b> ไป FF02::2 เพื่อขอข้อมูล</div></li>
+    <li><div>Router ตอบ <b>Router Advertisement</b> บอก prefix → โฮสต์เอา prefix + interface ID เป็น global address</div></li>
+  </ol>
+  <h3>การอยู่ร่วมกันของ IPv4 และ IPv6</h3>
+  <div class="cards">
+    <div class="mini"><span class="k">1</span><h4>Dual stack</h4><p>เครื่องรัน IPv4 และ IPv6 พร้อมกัน เลือกใช้ตามปลายทาง (ถาม DNS ได้ A หรือ AAAA)</p></div>
+    <div class="mini"><span class="k">2</span><h4>Tunneling</h4><p>ห่อแพ็กเก็ต IPv6 ไว้ในแพ็กเก็ต IPv4 (protocol 41) เพื่อข้ามช่วงที่เป็น IPv4 อย่างเดียว</p></div>
+    <div class="mini"><span class="k">3</span><h4>Header translation</h4><p>แปลงเฮดเดอร์ v6 ↔ v4 เมื่ออีกฝั่งรู้จักแค่โปรโตคอลเดียว (เช่น NAT64)</p></div>
+  </div>
+</section>
+
+<!-- ================= Q3 flashcards ================= -->
+<section class="ch t-gr" id="q3">
+  <div class="ch-top"><span class="ch-no">ข้อ 3 · 10 ข้อ ข้อละ 1 คะแนน</span><a class="ex" href="#q3">ข้อสอบข้อ 3</a><button class="readbtn" data-id="q3" aria-pressed="false">อ่านแล้ว</button></div>
+  <h2>ท่องจำ IPv4 / IPv6</h2>
+  <p class="sub">ข้อนี้เน้นจำ แตะการ์ดเพื่อดูเฉลย ลองตอบในใจก่อนทุกครั้ง</p>
+  <div class="fc-bar">
+    <div class="seg" role="group" aria-label="กรองการ์ด"><button data-f="all" aria-pressed="true">ทั้งหมด</button><button data-f="v4" aria-pressed="false">IPv4</button><button data-f="v6" aria-pressed="false">IPv6</button></div>
+    <button class="btn ghost" id="fc-shuf">สลับลำดับ</button><button class="btn ghost" id="fc-open">เปิดเฉลยทั้งหมด</button>
+  </div>
+  <div class="fc" id="fc"></div>
+</section>
+
+<!-- ================= CH 26 ================= -->
+<section class="ch t-bl" id="transport">
+  <div class="ch-top"><span class="ch-no">บทที่ 26</span><a class="ex" href="#tcpcases">ข้อสอบข้อ 8</a><button class="readbtn" data-id="transport" aria-pressed="false">อ่านแล้ว</button></div>
+  <h2>Transport Layer: พอร์ต, UDP และ TCP</h2>
+  <p>ทำงานแบบ end-to-end ระหว่างโปรเซสต้นทางและปลายทาง ถ้าเทียบกับไปรษณีย์ router คือที่ทำการไปรษณีย์ ส่วน Transport คือคนตรวจว่าของถึงครบไหม ขาดก็สั่งส่งใหม่</p>
+  <h3>พอร์ต (16 บิต)</h3>
+  <div class="cards">
+    <div class="mini"><span class="k">0 – 1023</span><h4>Well-known</h4><p>IANA กำหนด เช่น 20/21 FTP, 80 HTTP</p></div>
+    <div class="mini"><span class="k">1024 – 49151</span><h4>Registered</h4><p>ลงทะเบียนกับ IANA ได้ เช่น 3306 MySQL</p></div>
+    <div class="mini"><span class="k">49152 – 65535</span><h4>Dynamic / private</h4><p>ใช้อิสระ client มักได้พอร์ตชั่วคราวช่วงนี้</p></div>
+  </div>
+  <div class="tw"><table>
+    <tr><th class="num">พอร์ต</th><th>โปรโตคอล</th><th>บน</th><th class="num">พอร์ต</th><th>โปรโตคอล</th><th>บน</th></tr>
+    <tr><td class="num">20 / 21</td><td>FTP data / control</td><td>TCP</td><td class="num">67 / 68</td><td>DHCP (BOOTP) server / client</td><td>UDP</td></tr>
+    <tr><td class="num">22</td><td>SSH</td><td>TCP</td><td class="num">69</td><td>TFTP</td><td>UDP</td></tr>
+    <tr><td class="num">23</td><td>Telnet</td><td>TCP</td><td class="num">110 / 143</td><td>POP3 / IMAP</td><td>TCP</td></tr>
+    <tr><td class="num">25</td><td>SMTP</td><td>TCP</td><td class="num">123</td><td>NTP</td><td>UDP</td></tr>
+    <tr><td class="num">53</td><td>DNS</td><td>UDP (TCP)</td><td class="num">161 / 162</td><td>SNMP / SNMP trap</td><td>UDP</td></tr>
+    <tr><td class="num">80 / 443</td><td>HTTP / HTTPS</td><td>TCP</td><td class="num">520</td><td>RIP</td><td>UDP</td></tr>
+  </table></div>
+  <h3>UDP vs TCP</h3>
+  <div class="tw"><table>
+    <tr><th></th><th>UDP</th><th>TCP</th></tr>
+    <tr><td>การเชื่อมต่อ</td><td>connectionless</td><td>connection-oriented (three-way handshake)</td></tr>
+    <tr><td>ความน่าเชื่อถือ</td><td>ไม่มี ACK ไม่ส่งซ้ำ ไม่เรียงลำดับ</td><td>sequence number ทุกไบต์ + ACK + ส่งซ้ำ</td></tr>
+    <tr><td>Flow/Congestion control</td><td>ไม่มี</td><td>มี (rwnd, cwnd)</td></tr>
+    <tr><td>หน่วยข้อมูล</td><td>datagram (ขอบเขตข้อความคงอยู่)</td><td>byte stream → segment</td></tr>
+    <tr><td>เฮดเดอร์</td><td>8 ไบต์: src port, dst port, length, checksum</td><td>20–60 ไบต์</td></tr>
+    <tr><td>เหมาะกับ</td><td>DNS, DHCP, SNMP, VoIP, สตรีมมิ่ง</td><td>เว็บ, อีเมล, FTP, SSH, LINE</td></tr>
+  </table></div>
+  <p>UDP checksum คิดรวม <b>pseudo header</b> (IP ต้นทาง, IP ปลายทาง, protocol, UDP length) เพื่อกันส่งผิดเครื่อง ทำไมยังใช้ UDP: ไม่ต้องสร้างการเชื่อมต่อจึงหน่วงน้อย เฮดเดอร์เล็ก แอปจัดการเรื่องความน่าเชื่อถือเองถ้าต้องการ</p>
+  <h3>TCP segment</h3>
+  <div class="two">
+    <div class="box"><span class="tag">ฟิลด์</span><ul><li>Source / Destination port (16 บิต)</li><li><b>Sequence number</b> (32): เลขไบต์แรกของข้อมูลใน segment</li><li><b>Acknowledgment number</b> (32): ไบต์ถัดไปที่<b>อยากได้</b></li><li>HLEN (4): หน่วย 32 บิต ปกติ 5 = 20 ไบต์</li><li>Window size (16): rwnd สำหรับ flow control</li><li>Checksum, Urgent pointer, Options</li></ul></div>
+    <div class="box"><span class="tag">Control flags (6 บิต)</span><ul><li><b>URG</b> ให้ดู urgent pointer</li><li><b>ACK</b> ช่อง ack ใช้ได้</li><li><b>PSH</b> ส่งขึ้นแอปทันที</li><li><b>RST</b> รีเซ็ตการเชื่อมต่อ</li><li><b>SYN</b> เริ่มเชื่อมต่อ ตกลงเลข sequence</li><li><b>FIN</b> ปิดการเชื่อมต่อ</li></ul></div>
+  </div>
+  <h3>Three-way handshake และการปิด (ตัวอย่างหนังสือ)</h3>
+  <div class="fig"><svg viewBox="0 0 680 430" role="img" aria-label="TCP three-way handshake และ FIN">
+    <defs><marker id="mT" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path class="ahc" d="M0,0 L10,5 L0,10z"/></marker></defs>
+    <text class="tx b" x="130" y="22" text-anchor="middle">Client :3456</text><text class="tx b" x="550" y="22" text-anchor="middle">Server :21 (FTP)</text>
+    <line class="ln" x1="130" y1="32" x2="130" y2="420"/><line class="ln" x1="550" y1="32" x2="550" y2="420"/>
+    <line class="lnc" x1="130" y1="50" x2="548" y2="100" marker-end="url(#mT)"/>
+    <text class="txm halo" x="340" y="64" text-anchor="middle">SYN · seq=1000</text>
+    <line class="lnc" x1="550" y1="112" x2="132" y2="162" marker-end="url(#mT)"/>
+    <text class="txm halo" x="340" y="126" text-anchor="middle">SYN+ACK · seq=3000 ack=1001 win=4096</text>
+    <line class="lnc" x1="130" y1="174" x2="548" y2="224" marker-end="url(#mT)"/>
+    <text class="txm halo" x="340" y="188" text-anchor="middle">ACK · seq=1001 ack=3001 win=2000</text>
+    <text class="tx sm mut" x="20" y="250">… รับส่งข้อมูล …</text>
+    <line class="ln2" x1="130" y1="262" x2="550" y2="262"/>
+    <line class="lnc" x1="130" y1="280" x2="548" y2="315" marker-end="url(#mT)"/><text class="txm halo" x="340" y="292" text-anchor="middle">FIN · seq=x ack=y</text>
+    <line class="lnc" x1="550" y1="322" x2="132" y2="352" marker-end="url(#mT)"/><text class="txm halo" x="340" y="332" text-anchor="middle">ACK · ack=x+1</text>
+    <line class="lnc" x1="550" y1="366" x2="132" y2="396" marker-end="url(#mT)"/><text class="txm halo" x="340" y="376" text-anchor="middle">FIN · seq=y ack=x+1</text>
+    <line class="lnc" x1="130" y1="404" x2="548" y2="420" marker-end="url(#mT)"/><text class="txm halo" x="340" y="408" text-anchor="middle">ACK · ack=y+1</text>
+  </svg></div>
+  <ul>
+    <li>SYN ใช้เลข sequence 1 ตัว จึงตอบ ack = 1001 ทั้งที่ยังไม่มีข้อมูล</li>
+    <li>win = 4096 ที่ server ให้มา แปลว่า client ส่งได้ไบต์ 1001 ถึง 5096</li>
+    <li>ISN สุ่ม/เพิ่มขึ้นตามนาฬิกาทุก 4 µs ไม่ซ้ำกัน หลังเครื่องล่มต้องรอ quiet time</li>
+    <li>ปิดการเชื่อมต่อต้องยอมทั้งสองฝั่ง ใช้ FIN แทน SYN</li>
+  </ul>
+</section>
+
+<!-- ================= CH 27 ================= -->
+<section class="ch t-bl" id="congestion">
+  <div class="ch-top"><span class="ch-no">บทที่ 27</span><a class="ex" href="#fastrx">ข้อ 6</a><a class="ex" href="#cwnd">ข้อ 7</a><a class="ex" href="#tcpcases">ข้อ 8</a><a class="ex" href="#rtt">ข้อ 10</a><button class="readbtn" data-id="congestion" aria-pressed="false">อ่านแล้ว</button></div>
+  <h2>TCP Sliding Window, RTT/Timeout และ Congestion Control</h2>
+  <h3>Sliding window</h3>
+  <p>TCP ทำงานแบบ byte-oriented หลักเดียวกับ Go-Back-N/Selective Repeat ข้อมูลในบัฟเฟอร์ผู้ส่งแบ่งเป็น: (1) ส่งแล้วได้ ACK แล้ว (2) ส่งแล้วรอ ACK (3) ส่งได้ทันทีเมื่อ window ขยับ ตัวอย่างหนังสือ: 20–25 ได้ ACK แล้ว, 26–32 รอ ACK เมื่อได้ ACK ของ 26 และ 27 window เลื่อนไปส่ง 33 และ 34</p>
+  <div class="two">
+    <div class="box"><span class="tag">Flow control · rwnd</span><p>ผู้<b>รับ</b>บอกว่าบัฟเฟอร์รับได้อีกเท่าไรในช่อง window ของ ACK ตัวอย่าง: rwnd 8 → ผู้รับช้าลด rwnd เป็น 3 → ผู้ส่งส่งแค่ 3 → ลดเหลือ 1 ลดได้จนถึง 0 (หยุดส่ง)</p></div>
+    <div class="box"><span class="tag">Congestion control · cwnd</span><p>ผู้<b>ส่ง</b>ประเมินเองว่า<b>เครือข่าย</b>รับไหวเท่าไร สัญญาณคือแพ็กเก็ตหาย (timeout หรือ dup ACK) ส่งได้จริง <span class="m">awnd = min(credit/rwnd, cwnd)</span></p></div>
+  </div>
+  <div class="box key"><span class="tag">Bandwidth-delay product</span><p>window ที่ดีที่สุด ≈ bandwidth × RTT เช่น 100 Mbps × 5 ms = 512 kbit = <b>64 KB</b> ทำให้ส่งต่อเนื่องเต็มท่อ window ใหญ่ไป throughput สูงแต่เสี่ยงหาย เล็กไปใช้เครือข่ายไม่คุ้ม</p></div>
+
+  <h3 id="rtt">RTT และ Timeout <a class="ex" href="#rtt">ข้อ 10</a></h3>
+  <div class="box key"><span class="tag">สูตร (หนังสือ 27.2)</span>
+    <p class="m" style="font-size:15px;line-height:2">EstimatedRTT = (1 − α)·EstimatedRTT + α·SampleRTT &nbsp;&nbsp;(α = 1/8 = 0.125)<br>DevRTT = (1 − β)·DevRTT + β·|SampleRTT − EstimatedRTT| &nbsp;&nbsp;(β = 1/4 = 0.25)<br>TimeoutInterval = EstimatedRTT + 4·DevRTT</p>
+    <p>เรียกว่า Exponential Weighted Moving Average (EWMA) ค่าเก่ามีน้ำหนัก 7/8 ค่าใหม่ 1/8 จึงไม่แกว่งตามตัวอย่างเดียว</p>
+  </div>
+  <div class="box"><span class="tag">ทำมือ 1 รอบ</span><p>EstimatedRTT = 100 ms, DevRTT = 5 ms, SampleRTT ใหม่ = 106 ms</p><ol>
+    <li>Est = 0.875 × 100 + 0.125 × 106 = 87.5 + 13.25 = <b>100.75 ms</b></li>
+    <li>Dev = 0.75 × 5 + 0.25 × |106 − 100.75| = 3.75 + 1.3125 = <b>5.0625 ms</b></li>
+    <li>Timeout = 100.75 + 4 × 5.0625 = <b>121 ms</b></li></ol></div>
+  <div class="box tool"><span class="tag">ลองเล่น · ใส่ SampleRTT หลายค่าได้</span>
+    <div class="row">
+      <label class="f" for="rtt-est">EstimatedRTT เริ่ม<input type="number" id="rtt-est" value="100" step="any"></label>
+      <label class="f" for="rtt-dev">DevRTT เริ่ม<input type="number" id="rtt-dev" value="5" step="any"></label>
+      <label class="f" for="rtt-a">α<input type="number" id="rtt-a" value="0.125" step="any"></label>
+      <label class="f" for="rtt-b">β<input type="number" id="rtt-b" value="0.25" step="any"></label>
+    </div>
+    <div class="row"><label class="f" for="rtt-s" style="flex:1 1 260px">SampleRTT (คั่นด้วย , หรือเว้นวรรค)<input type="text" id="rtt-s" value="106, 120, 140, 90, 115"></label><button class="btn" id="rtt-go">คำนวณ</button></div>
+    <div class="row" style="font-size:13.5px;gap:14px">
+      <label><input type="radio" name="rttmode" value="new" checked> DevRTT ใช้ EstimatedRTT ตัวใหม่ (ตามลำดับในหนังสือ)</label>
+      <label><input type="radio" name="rttmode" value="old"> ใช้ตัวเดิม (RFC 6298)</label>
+    </div>
+    <div class="out" id="rtt-out"></div>
+  </div>
+  <div class="box trap"><span class="tag">กับดัก</span><p>ถ้าโจทย์ให้แค่ α ไม่ให้ DevRTT ส่วนใหญ่ต้องการแค่ EstimatedRTT หรือใช้สูตรเก่า Timeout = β × EstimatedRTT (β ≈ 2) ให้ดูว่าอาจารย์สอนแบบไหน และสังเกตว่าโจทย์ให้ α เป็นน้ำหนักของค่าใหม่ (แบบหนังสือ) หรือของค่าเก่า</p></div>
+  <p><b>ทำไมไม่ใช้ RTT ล่าสุดตรง ๆ:</b> RTT แกว่งมาก timeout จะสั้นเกินจนส่งซ้ำโดยไม่จำเป็น หรือยาวเกินจนตอบสนองการสูญหายช้า · <b>Timeout ยาวไป</b> → รอนาน ตรวจพบ congestion ช้า · <b>สั้นไป</b> → retransmit ก่อน ACK มาถึง เพิ่มภาระเครือข่าย</p>
+
+  <h3>Congestion collapse</h3>
+  <p>ช่วงโหลดน้อย throughput เพิ่มตามโหลดเป็นเส้นตรง พอเครือข่ายแน่น แพ็กเก็ตหาย ทุกคนส่งซ้ำ ยิ่งแน่นขึ้นจน throughput ตกลงเกือบศูนย์ TCP จึงถือว่าแพ็กเก็ตหาย = เกิด congestion (เพราะความผิดพลาดของลิงก์มีน้อยกว่า 1%)</p>
+  <div class="cards">
+    <div class="mini"><span class="k">1</span><h4>Slow start</h4><p>เริ่ม cwnd = 1 MSS ได้ ACK ครบรอบ cwnd เพิ่มเป็น 2 เท่า (exponential) จนถึง ssthresh</p></div>
+    <div class="mini"><span class="k">2</span><h4>Congestion avoidance</h4><p>เมื่อ cwnd ≥ ssthresh เพิ่มทีละ 1 MSS ต่อ RTT (additive increase)</p></div>
+    <div class="mini"><span class="k">3</span><h4>Fast retransmit</h4><p>ได้ ACK เลขเดิมซ้ำ 3 ครั้ง ส่ง segment นั้นใหม่ทันทีไม่รอ timeout</p></div>
+    <div class="mini"><span class="k">4</span><h4>Fast recovery</h4><p>หลัง fast retransmit ลด cwnd เหลือครึ่ง (ไม่ลดเหลือ 1) แล้วเข้า congestion avoidance เลย</p></div>
+  </div>
+
+  <h3 id="cwnd">กราฟ cwnd: Slow start + threshold <a class="ex" href="#cwnd">ข้อ 7</a></h3>
+  <ol class="steps">
+    <li><div>เริ่ม cwnd = 1, ssthresh = ค่าที่โจทย์ให้ (หนังสือใช้ 65535 ไบต์)</div></li>
+    <li><div>ทุกรอบ (RTT) ถ้า cwnd &lt; ssthresh ให้ <b>คูณ 2</b> (ไม่เกิน ssthresh) ถ้า ≥ ssthresh ให้ <b>บวก 1</b></div></li>
+    <li><div>เกิด <b>timeout</b>: ssthresh = cwnd/2, cwnd = 1 แล้ว slow start ใหม่</div></li>
+    <li><div>เกิด <b>3 dup ACK</b>: ssthresh = cwnd/2, cwnd = ssthresh (fast recovery) แล้วเพิ่มทีละ 1</div></li>
+  </ol>
+  <div class="box tool"><span class="tag">ลองเล่น · วาดกราฟเอง</span>
+    <div class="row">
+      <label class="f" for="cw-ss">ssthresh เริ่ม<input type="number" id="cw-ss" value="16" min="2"></label>
+      <label class="f" for="cw-n">จำนวนรอบ<input type="number" id="cw-n" value="22" min="5" max="60"></label>
+      <label class="f" for="cw-e1">เหตุการณ์ A รอบที่<input type="number" id="cw-e1" value="9" min="0"></label>
+      <label class="f" for="cw-t1">ชนิด A<select id="cw-t1"><option value="to">Timeout</option><option value="dup">3 dup ACK</option><option value="none">ไม่มี</option></select></label>
+      <label class="f" for="cw-e2">เหตุการณ์ B รอบที่<input type="number" id="cw-e2" value="17" min="0"></label>
+      <label class="f" for="cw-t2">ชนิด B<select id="cw-t2"><option value="dup">3 dup ACK</option><option value="to">Timeout</option><option value="none">ไม่มี</option></select></label>
+      <button class="btn" id="cw-go">วาด</button>
+    </div>
+    <div class="fig"><svg id="cwSvg" viewBox="0 0 680 330" role="img" aria-label="กราฟ congestion window"></svg></div>
+    <div class="legend" style="margin:6px 0 0"><span><i style="background:var(--bl)"></i>cwnd ช่วง slow start</span><span><i style="background:var(--gr)"></i>cwnd ช่วง congestion avoidance</span><span><i style="background:var(--or)"></i>ssthresh (เส้นประ)</span></div>
+    <div class="out" id="cw-out"></div>
+  </div>
+  <div class="box"><span class="tag">โจทย์ท้ายบทข้อ 10</span><p>Slow start แล้วเกิด timeout ตอน window = 100 → ssthresh = 50, cwnd = 1 → slow start 1, 2, 4, 8, 16, 32 แล้วติดที่ 50 → จากนั้นเพิ่มเชิงเส้น 51, 52, 53 … (ถ้าไม่มีความผิดพลาดอีก)</p></div>
+
+  <h3 id="fastrx">Fast retransmission: ACK 1+3 ครั้ง <a class="ex" href="#fastrx">ข้อ 6</a></h3>
+  <p>ตัวอย่างหนังสือรูป 27.7 segment ละ 100 ไบต์ Seq 1301 หายระหว่างทาง แต่ 1401, 1501, 1601 ไปถึง</p>
+  <div class="box tool"><span class="tag">ดูทีละขั้น</span>
+    <div class="fig"><svg id="frSvg" viewBox="0 0 680 500" role="img" aria-label="TCP fast retransmit">
+      <defs>
+        <marker id="mI" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path class="ah" d="M0,0 L10,5 L0,10z"/></marker>
+        <marker id="mO" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path class="aho" d="M0,0 L10,5 L0,10z"/></marker>
+        <marker id="mG" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path class="ahg" d="M0,0 L10,5 L0,10z"/></marker>
+      </defs>
+      <text class="tx b" x="110" y="20" text-anchor="middle">ผู้ส่ง</text><text class="tx b" x="540" y="20" text-anchor="middle">ผู้รับ</text>
+      <line class="ln" x1="110" y1="30" x2="110" y2="490"/><line class="ln" x1="540" y1="30" x2="540" y2="490"/>
+      <g data-st="1">
+        <line class="ln" x1="110" y1="44" x2="538" y2="98" marker-end="url(#mI)"/><text class="txm" x="100" y="48" text-anchor="end">Seq 1201</text>
+        <line class="lnb" x1="110" y1="80" x2="320" y2="107"/><path class="lnb" d="M312,99 l16,16 M328,99 l-16,16"/><text class="txm" x="100" y="84" text-anchor="end">Seq 1301</text>
+        <line class="ln" x1="110" y1="116" x2="538" y2="170" marker-end="url(#mI)"/><text class="txm" x="100" y="120" text-anchor="end">Seq 1401</text>
+        <line class="ln" x1="110" y1="152" x2="538" y2="206" marker-end="url(#mI)"/><text class="txm" x="100" y="156" text-anchor="end">Seq 1501</text>
+        <line class="ln" x1="110" y1="188" x2="538" y2="242" marker-end="url(#mI)"/><text class="txm" x="100" y="192" text-anchor="end">Seq 1601</text>
+      </g>
+      <g data-st="2"><line class="ln" x1="540" y1="100" x2="112" y2="150" marker-end="url(#mI)"/><text class="txm" x="550" y="104">ACK 1301</text></g>
+      <g data-st="3"><line class="lno" x1="540" y1="172" x2="112" y2="222" marker-end="url(#mO)"/><text class="txm" x="550" y="176" style="fill:var(--or)">ACK 1301 ซ้ำ 1</text></g>
+      <g data-st="4"><line class="lno" x1="540" y1="208" x2="112" y2="258" marker-end="url(#mO)"/><text class="txm" x="550" y="212" style="fill:var(--or)">ACK 1301 ซ้ำ 2</text></g>
+      <g data-st="5"><line class="lno" x1="540" y1="244" x2="112" y2="294" marker-end="url(#mO)"/><text class="txm" x="550" y="248" style="fill:var(--or)">ACK 1301 ซ้ำ 3</text></g>
+      <g data-st="6"><line class="lng" x1="110" y1="320" x2="538" y2="374" marker-end="url(#mG)"/><text class="txm b" x="100" y="324" text-anchor="end" style="fill:var(--gr)">Seq 1301</text><text class="tx sm" x="120" y="312" style="fill:var(--gr)">ส่งซ้ำทันที (fast retransmit)</text></g>
+      <g data-st="7"><line class="lng" x1="540" y1="378" x2="112" y2="428" marker-end="url(#mG)"/><text class="txm b" x="550" y="382" style="fill:var(--gr)">ACK 1701</text><text class="tx sm mut" x="550" y="400">cumulative ACK</text></g>
+    </svg></div>
+    <div class="stepper"><button class="btn ghost" id="frPrev">ย้อน</button><button class="btn" id="frNext">ถัดไป</button><button class="btn ghost" id="frAll">แสดงทั้งหมด</button><span class="ct" id="frCt"></span><span class="cap" id="frCap"></span></div>
+  </div>
+  <div class="box ans"><span class="tag">ตอบข้อ 6</span><ul>
+    <li>"ACK 1+3 ครั้ง" = ACK 1301 ปกติ 1 ครั้ง + ซ้ำอีก 3 ครั้ง (รวม 4 ครั้ง) ผู้ส่งจึงสรุปว่า <b>Seq 1301 หาย</b></li>
+    <li>ผู้ส่ง<b>ส่ง Seq 1301 ใหม่ทันที</b> ไม่รอ timeout และไม่ต้องส่ง 1401–1601 ซ้ำ เพราะผู้รับเก็บไว้ในบัฟเฟอร์แล้ว (คล้าย selective repeat)</li>
+    <li>ผู้รับได้ 1301 แล้วตอบ <b>ACK 1701</b> (cumulative ACK = ได้ครบถึง 1700)</li>
+    <li>cwnd: fast recovery → ssthresh = cwnd/2, cwnd = ssthresh แล้วเข้า congestion avoidance (ไม่กลับไป 1 เพราะ ACK ยังมา แปลว่าเครือข่ายไม่ได้แน่นมาก)</li>
+  </ul></div>
+
+  <h3 id="tcpcases">TCP กรณีต่าง ๆ <a class="ex" href="#tcpcases">ข้อ 8</a></h3>
+  <p class="sub">ข้อนี้ไม่มีรูป ต้องเล่าเป็นลำดับ: เกิดอะไร → TCP รู้ได้อย่างไร → ทำอะไรต่อ → cwnd/ssthresh เป็นเท่าไร</p>
+  <details class="qa"><summary>Segment หายแล้วเกิด timeout</summary><div class="body">ผู้ส่งไม่ได้ ACK ภายใน TimeoutInterval → ส่ง segment นั้นซ้ำ · ถือว่าเครือข่ายแน่นมาก: ssthresh = cwnd/2, cwnd = 1 แล้วเริ่ม slow start ใหม่ · timeout ถัดไปมักคูณ 2 (exponential backoff)</div></details>
+  <details class="qa"><summary>ได้ duplicate ACK 3 ครั้ง</summary><div class="body">แปลว่า segment ตัวที่ผู้รับขอหาย แต่ตัวหลังมาถึง → fast retransmit ส่งตัวที่หายทันที → fast recovery: ssthresh = cwnd/2, cwnd = ssthresh แล้วเพิ่มแบบเชิงเส้น</div></details>
+  <details class="qa"><summary>Segment มาไม่เรียงลำดับ (out of order)</summary><div class="body">ผู้รับเก็บ segment ที่มาก่อนไว้ในบัฟเฟอร์ และส่ง ACK ซ้ำของเลขที่ยังขาด ถ้ามาสลับแค่ 1–2 ตัวยังไม่ถึง 3 dup ACK จึงไม่ส่งซ้ำ เมื่อตัวที่ขาดมาถึงก็ตอบ ACK สะสมทีเดียว</div></details>
+  <details class="qa"><summary>ACK หาย แต่ ACK ตัวถัดไปมาถึงก่อน timeout</summary><div class="body">ไม่ต้องส่งซ้ำ เพราะ ACK ของ TCP เป็นแบบ cumulative: ACK = n แปลว่าได้ทุกไบต์ก่อน n แล้ว ครอบคลุม ACK ที่หายไป</div></details>
+  <details class="qa"><summary>Timeout เร็วเกินไป (premature timeout)</summary><div class="body">ผู้ส่งส่งซ้ำทั้งที่ข้อมูลถึงแล้ว ผู้รับเห็น sequence ซ้ำก็ทิ้งและตอบ ACK เดิม เสียแบนด์วิดท์ จึงต้องตั้ง timeout จาก EstimatedRTT + 4·DevRTT</div></details>
+  <details class="qa"><summary>Host A ส่ง 2 segment: seq 150 และ seq 190 (โจทย์ท้ายบทข้อ 6)</summary><div class="body">(a) segment แรกมีข้อมูล 190 − 150 = <b>40 ไบต์</b> · (b) ถ้า segment แรกหายแต่ segment ที่สองถึง B จะตอบ <b>ACK = 150</b> เพราะยังรอไบต์ 150 อยู่</div></details>
+  <details class="qa"><summary>ผู้รับตอบ rwnd = 0</summary><div class="body">บัฟเฟอร์ผู้รับเต็ม ผู้ส่งต้องหยุดส่งข้อมูลจนกว่าจะได้ window update (ผู้ส่งส่ง probe เล็ก ๆ เป็นระยะด้วย persist timer) นี่คือ flow control ไม่ใช่ congestion control</div></details>
+  <details class="qa"><summary>ส่งได้จริงกี่ segment ถ้า rwnd กับ cwnd ไม่เท่ากัน</summary><div class="body">awnd = min(rwnd, cwnd) เช่น rwnd = 10, cwnd = 4 → ส่งได้ 4 ตัวที่ติดคอขวดคือเครือข่าย ถ้า rwnd = 3, cwnd = 8 → ส่งได้ 3 ติดที่ผู้รับ</div></details>
+  <details class="qa"><summary>เปิดและปิดการเชื่อมต่อ</summary><div class="body">เปิด: SYN(seq=x) → SYN+ACK(seq=y, ack=x+1) → ACK(ack=y+1) · ปิด: FIN → ACK → FIN → ACK ทั้งสองฝั่งต้องยอม (half-close ทีละทิศ)</div></details>
+  <details class="qa"><summary>TCP บนเครือข่ายไร้สาย (โจทย์ท้ายบทข้อ 5)</summary><div class="body">ลิงก์ไร้สายมี bit error สูง แพ็กเก็ตหายเพราะสัญญาณไม่ใช่เพราะ congestion แต่ TCP เข้าใจว่า congestion จึงลด cwnd เกินจำเป็น throughput ตกเป็นช่วง ๆ</div></details>
+</section>
+
+<!-- ================= CH 28 ================= -->
+<section class="ch t-br" id="app">
+  <div class="ch-top"><span class="ch-no">บทที่ 28</span><button class="readbtn" data-id="app" aria-pressed="false">อ่านแล้ว</button></div>
+  <h2>Application Layer</h2>
+  <h3>Socket API</h3>
+  <p>แอปเรียกใช้เครือข่ายผ่าน API ของ OS เช่น Berkeley (BSD) socket ซึ่งเป็นต้นแบบของ WinSock ปลายทางระบุด้วย IP + port</p>
+  <div class="two">
+    <div class="box"><span class="tag">TCP server</span><p class="m">socket() → bind() → listen() → accept() → recv()/send() → close()</p></div>
+    <div class="box"><span class="tag">TCP client</span><p class="m">socket() → connect() → send()/recv() → close()</p><p>UDP ไม่มี listen/accept/connect ใช้ sendto()/recvfrom()</p></div>
+  </div>
+  <div class="cards">
+    <div class="mini"><span class="k">TCP 20/21</span><h4>FTP</h4><p>2 การเชื่อมต่อ: control (21) เปิดตลอด session, data (20) เปิดใหม่ทุกไฟล์ มี active/passive mode</p></div>
+    <div class="mini"><span class="k">TCP 80</span><h4>HTTP</h4><p>request–response, <b>stateless</b> · คำสั่ง GET, POST, PUT · สถานะ 200, 301, 404, 500</p></div>
+    <div class="mini"><span class="k">UDP 53</span><h4>DNS</h4><p>แปลงชื่อเป็น IP ไล่ root → TLD (.th) → ac.th → kku.ac.th</p></div>
+  </div>
+  <h3>HTTP 1.0 vs 1.1</h3>
+  <div class="tw"><table>
+    <tr><th></th><th>HTTP 1.0</th><th>HTTP 1.1</th></tr>
+    <tr><td>การเชื่อมต่อ</td><td>non-persistent: เปิด TCP ใหม่ทุก object</td><td>persistent: ใช้ TCP เดิมหลาย object</td></tr>
+    <tr><td>หน้าเว็บมี 10 รูป</td><td>11 ครั้ง × (SYN + request) ≈ 2 RTT ต่อ object</td><td>handshake ครั้งเดียว + pipelining</td></tr>
+    <tr><td>อื่น ๆ</td><td>–</td><td>Host header (หลายเว็บใน IP เดียว), cache ดีขึ้น</td></tr>
+  </table></div>
+  <p>ขั้นตอน HTTP: (1) เปิด TCP ไปเซิร์ฟเวอร์ (2) ส่ง request + URL (3) เซิร์ฟเวอร์ตอบ HTML/รูป (4) ปิด TCP</p>
+  <h3>Streaming: RTP / RTCP</h3>
+  <div class="two">
+    <div class="box"><span class="tag">RTP (บน UDP)</span><ul><li><b>Sequence number</b> ตรวจแพ็กเก็ตหาย/สลับ</li><li><b>Timestamp</b> เล่นตามเวลา ชดเชย jitter</li><li><b>Payload type</b> ชนิด codec</li><li><b>SSRC</b> ระบุแหล่ง, CSRC แหล่งที่ผสม, Marker</li></ul></div>
+    <div class="box"><span class="tag">RTCP</span><p>ส่งรายงานคุณภาพคู่กับ RTP: Sender report (SR), Receiver report (RR: loss, jitter), SDES (ชื่อผู้ใช้), BYE, APP</p></div>
+  </div>
+  <h3>อีเมล</h3>
+  <div class="cards">
+    <div class="mini"><span class="k">TCP 25 · push</span><h4>SMTP</h4><p>ส่งจาก client ไปเซิร์ฟเวอร์ และระหว่างเซิร์ฟเวอร์</p></div>
+    <div class="mini"><span class="k">header</span><h4>MIME</h4><p>ส่งไฟล์แนบ/ภาษาที่ไม่ใช่ ASCII ด้วย Content-Type และ base64</p></div>
+    <div class="mini"><span class="k">TCP 110 · pull</span><h4>POP3</h4><p>ดาวน์โหลดมาเครื่องแล้ว (มัก) ลบจากเซิร์ฟเวอร์</p></div>
+    <div class="mini"><span class="k">TCP 143 · pull</span><h4>IMAP</h4><p>เก็บบนเซิร์ฟเวอร์ จัดโฟลเดอร์ได้ ซิงก์หลายเครื่อง</p></div>
+  </div>
+</section>
+
+<!-- ================= CH 29 ================= -->
+<section class="ch t-br" id="snmp">
+  <div class="ch-top"><span class="ch-no">บทที่ 29</span><button class="readbtn" data-id="snmp" aria-pressed="false">อ่านแล้ว</button></div>
+  <h2>Network Management: SNMP</h2>
+  <div class="cards">
+    <div class="mini"><span class="k">ผู้สั่ง</span><h4>Manager (NMS)</h4><p>สถานีจัดการ ดึง/ตั้งค่าอุปกรณ์</p></div>
+    <div class="mini"><span class="k">ผู้ถูกจัดการ</span><h4>Agent</h4><p>โปรแกรมบน router/switch/server ตอบคำถาม</p></div>
+    <div class="mini"><span class="k">ฐานข้อมูล</span><h4>MIB</h4><p>รายการตัวแปรที่จัดการได้ (system, interfaces, ip, tcp, udp …)</p></div>
+    <div class="mini"><span class="k">กติกา</span><h4>SMI</h4><p>วิธีตั้งชื่อ (OID tree เช่น 1.3.6.1.2.1 = mib-2) ชนิดข้อมูล และการเข้ารหัส (BER)</p></div>
+  </div>
+  <div class="tw"><table>
+    <tr><th>ข้อความ</th><th>ทิศทาง</th><th>ใช้ทำ</th></tr>
+    <tr><td>GetRequest (get)</td><td>manager → agent</td><td>อ่านค่าตัวแปร</td></tr>
+    <tr><td>GetNextRequest (get-next)</td><td>manager → agent</td><td>อ่านตัวถัดไปในลำดับ (ไล่ทั้งตาราง)</td></tr>
+    <tr><td>SetRequest (set)</td><td>manager → agent</td><td>ตั้งค่า</td></tr>
+    <tr><td>Response</td><td>agent → manager</td><td>ตอบกลับ</td></tr>
+    <tr><td>Trap</td><td>agent → manager</td><td>แจ้งเตือนเองเมื่อถึงเงื่อนไข ลดการถามซ้ำ ๆ</td></tr>
+  </table></div>
+  <p>SNMP ทำงานบน <b>UDP</b>: agent ฟังพอร์ต <b>161</b>, manager รับ trap ที่ <b>162</b> · v1/v2c ใช้ community string · v3 เพิ่ม authentication และการเข้ารหัส</p>
+</section>
+
+<!-- ================= CH 30–31 ================= -->
+<section class="ch t-br" id="qos">
+  <div class="ch-top"><span class="ch-no">บทที่ 30–31</span><a class="ex" href="#qos">ข้อสอบข้อ 11</a><button class="readbtn" data-id="qos" aria-pressed="false">อ่านแล้ว</button></div>
+  <h2>Quality of Service</h2>
+  <p>ยกระดับจาก best effort ให้แต่ละทราฟฟิกได้บริการตามที่ต้องการ ค่าที่ใช้วัด: <b>throughput</b>, <b>delay</b>, <b>bandwidth</b>, <b>residual error rate</b>, <b>delay variation (jitter)</b>, <b>loss rate</b>, <b>availability</b></p>
+  <div class="cards">
+    <div class="mini"><span class="k">1</span><h4>Queueing disciplines</h4><p>จัดลำดับแพ็กเก็ตในคิวของ router</p></div>
+    <div class="mini"><span class="k">2</span><h4>Traffic shaping</h4><p>จำกัดอัตราที่ส่งเข้าเครือข่าย เกินก็พักหรือทิ้ง</p></div>
+    <div class="mini"><span class="k">3</span><h4>Resource reservation</h4><p>จองบัฟเฟอร์/แบนด์วิดท์ให้ flow ตลอดการใช้งาน</p></div>
+    <div class="mini"><span class="k">4</span><h4>Admission control</h4><p>ตัดสินใจรับหรือไม่รับ flow ตามทรัพยากรที่มี (เหมือนมหาวิทยาลัยรับนักศึกษา)</p></div>
+  </div>
+
+  <h3>ขั้นตอนของ QoS แบบสายพาน <a class="ex" href="#qos">ข้อ 11</a></h3>
+  <p class="sub">โน้ตบอกว่ามาจากสไลด์ 11 ซึ่งไม่อยู่ในไฟล์ที่มี ลำดับด้านล่างมาจากหนังสือรูป 31.11 (traffic conditioner ที่ boundary node ของ DiffServ) แล้วต่อด้วยคิวและ scheduler ถ้าสไลด์เรียงต่างจากนี้ให้ยึดสไลด์</p>
+  <div class="belt">
+    <div class="stations">
+      <div class="st"><div class="no">1</div><b>Classifier</b><span>คัดแยกแพ็กเก็ตจากเฮดเดอร์ แบบ BA (ดูแค่ DSCP) หรือ MF (IP, port ฯลฯ)</span></div>
+      <div class="st"><div class="no">2</div><b>Meter</b><span>วัดอัตราว่าตรงกับ traffic profile ที่ตกลงไว้ไหม</span></div>
+      <div class="st"><div class="no">3</div><b>Marker</b><span>เขียนค่า DSCP ลง DS field (ลดระดับได้ถ้าเกิน profile)</span></div>
+      <div class="st"><div class="no">4</div><b>Shaper / Dropper</b><span>หน่วงให้เรียบด้วย leaky bucket หรือทิ้งเมื่อบัฟเฟอร์เต็ม</span></div>
+      <div class="st"><div class="no">5</div><b>Queue + Scheduler</b><span>เข้าคิวตามคลาส แล้วส่งออกด้วย FIFO / Priority / WFQ</span></div>
+    </div>
+    <div class="track" aria-hidden="true"><span class="pk ef">EF</span><span class="pk af">AF</span><span class="pk dr">✕</span><span class="pk de">BE</span><span class="pk af">AF</span></div>
+  </div>
+
+  <h3>Queueing disciplines</h3>
+  <div class="tw"><table>
+    <tr><th>แบบ</th><th>ทำงานอย่างไร</th><th>ข้อดี / ข้อเสีย</th></tr>
+    <tr><td>FIFO</td><td>มาก่อนได้ก่อน คิวเดียว</td><td>ง่าย ใช้ทั่วไป / ไม่แยกความสำคัญ คิวเต็มก็ทิ้งท้ายคิว</td></tr>
+    <tr><td>Priority queue</td><td>ส่งคิวสำคัญสูงให้หมดก่อน (หนังสือ: W = 3 สูงสุด แพ็กเก็ต 8 (W=3) ได้ก่อน 5 (W=2) ที่มาพร้อมกัน)</td><td>งานสำคัญเร็ว / คิวต่ำอาจไม่ได้บริการเลย (starvation) คิวสำคัญจึงควรสั้น</td></tr>
+    <tr><td>Round robin</td><td>วนบริการคลาส 1 → 2 → 3 → 1 คลาสไหนว่างข้ามไป</td><td>ยุติธรรม / ไม่สนใจความต้องการต่างกัน</td></tr>
+    <tr><td>WFQ</td><td>วนตามน้ำหนัก เช่น 3 : 2 : 1 → รอบละ 3, 2, 1 แพ็กเก็ต</td><td>รับประกันขั้นต่ำให้ทุกคลาส ไม่ให้ session ไหนกินแบนด์วิดท์หมด เป็นหัวใจของ QoS ใน router ปัจจุบัน</td></tr>
+  </table></div>
+
+  <h3>Traffic shaping: Leaky bucket vs Token bucket</h3>
+  <p>วัดอัตราได้สองแบบ: <b>peak rate</b> (สูงสุดช่วงสั้น) และ <b>average rate</b> (เฉลี่ย วัดแบบ jumping-window หรือ moving-window)</p>
+  <div class="two">
+    <div class="box"><span class="tag">Leaky bucket</span><p>ถังรั่วน้ำออก<b>อัตราคงที่</b> burst เข้ามาเท่าไรก็ไหลออกเท่าเดิม ถังล้น = ทิ้งแพ็กเก็ต</p><p>ข้อเสีย: ช่วงเครือข่ายว่างก็ส่งเร็วขึ้นไม่ได้</p></div>
+    <div class="box"><span class="tag">Token bucket</span><p>สร้าง token อัตราคงที่ ส่งได้เมื่อมี token <b>สะสม token ไว้ได้</b> ช่วงว่าง จึงปล่อย burst ได้ตามจำนวน token ไม่มี token = ทิ้ง/รอ</p><p>ส่งได้สูงสุดในเวลา t ≈ b + r·t (b = ขนาดถัง, r = อัตรา token)</p></div>
+  </div>
+
+  <h3>IntServ + RSVP (per-flow)</h3>
+  <ul>
+    <li>จองทรัพยากรให้แต่ละ flow ล่วงหน้า service class: Guaranteed, Controlled-load, Best effort</li>
+    <li><b>RSVP</b>: ผู้ส่งส่ง <b>PATH</b> ลงไปหาผู้รับ (บอก Tspec) ผู้รับส่ง <b>RESV</b> ย้อนกลับขึ้นไปจอง → <b>receiver-based reservation</b></li>
+    <li>เก็บสถานะแบบ <b>soft state</b> ต้องส่ง refresh เรื่อย ๆ · flowspec (Rspec + Tspec) และ filter spec</li>
+    <li>Reservation style: Wildcard filter (WF), Fixed filter (FF), Shared explicit (SE) และรวมคำขอได้ (merging)</li>
+    <li>ข้อเสีย: <b>scalability</b> router ต้องจำทุก flow</li>
+  </ul>
+  <h3>DiffServ (per-class)</h3>
+  <ul>
+    <li>ใช้ <b>DS field</b>: 6 บิตแรก = <b>DSCP</b> (64 คลาส) + 2 บิตที่เหลือ อยู่ในช่อง ToS ของ IPv4 / Traffic class ของ IPv6 ไม่ต้องแก้ IP</li>
+    <li>ตกลงกับ ISP ล่วงหน้าด้วย <b>SLA</b> router ไม่ต้องเก็บสถานะ ทำงานแยกกันแต่ละ hop</li>
+    <li>DS domain มี <b>boundary node</b> (ingress/egress ทำ traffic conditioning) และ <b>interior node</b> (ส่งต่อตาม PHB)</li>
+  </ul>
+  <div class="tw"><table>
+    <tr><th>PHB</th><th>DSCP</th><th>บริการ</th></tr>
+    <tr><td>DE (Default)</td><td class="m">000000</td><td>best effort</td></tr>
+    <tr><td>EF (Expedited Forwarding)</td><td class="m">101110 (46)</td><td>พรีเมียม: delay, loss, jitter ต่ำ เหมือน leased line เหมาะกับเสียง</td></tr>
+    <tr><td>AF (Assured Forwarding)</td><td class="m">AF11–AF43</td><td>4 คลาส × 3 ระดับการทิ้ง (low/medium/high) = 12 ค่า ดีกว่า best effort แต่ไม่รับประกัน delay</td></tr>
+    <tr><td>Class selector</td><td class="m">xxx000</td><td>เข้ากันได้กับ IP precedence เดิม (11x000 สำหรับสัญญาณควบคุม)</td></tr>
+  </table></div>
+  <div class="tw"><table>
+    <tr><th></th><th>IntServ</th><th>DiffServ</th></tr>
+    <tr><td>หน่วยการจัดการ</td><td>per-flow</td><td>per-class (aggregate)</td></tr>
+    <tr><td>ส่งสัญญาณ</td><td>RSVP ทุก router บนเส้นทาง</td><td>ไม่มี ใช้ DSCP + SLA</td></tr>
+    <tr><td>สถานะใน router</td><td>soft state ทุก flow</td><td>ไม่มี</td></tr>
+    <tr><td>รับประกัน</td><td>ละเอียด end-to-end</td><td>หยาบกว่า</td></tr>
+    <tr><td>ขยายระบบ</td><td>ยาก</td><td>ง่าย</td></tr>
+  </table></div>
+
+  <h3>เกมจับคู่คำ <a class="ex" href="#qos">ข้อ 11</a></h3>
+  <div class="box tool"><span class="tag">เลือกศัพท์ แล้วเลือกความหมาย</span>
+    <div class="row" style="justify-content:space-between;margin-top:0"><span id="mg-score" class="m">คะแนน 0/6 · พลาด 0</span><button class="btn ghost" id="mg-new">สุ่มชุดใหม่</button></div>
+    <div class="mg-terms" id="mg-terms"></div>
+    <div class="mg-defs" id="mg-defs"></div>
+  </div>
+</section>
+
+<!-- ================= CH 32 ================= -->
+<section class="ch t-br" id="security">
+  <div class="ch-top"><span class="ch-no">บทที่ 32</span><button class="readbtn" data-id="security" aria-pressed="false">อ่านแล้ว</button></div>
+  <h2>Network Security</h2>
+  <div class="cards">
+    <div class="mini"><span class="k">C</span><h4>Confidentiality</h4><p>ความลับ คนไม่มีสิทธิ์อ่านไม่ได้</p></div>
+    <div class="mini"><span class="k">I</span><h4>Integrity</h4><p>ความถูกต้อง ไม่ถูกแก้ระหว่างทาง</p></div>
+    <div class="mini"><span class="k">A</span><h4>Availability</h4><p>ความพร้อมใช้ ใช้งานได้เมื่อต้องการ</p></div>
+  </div>
+  <div class="tw"><table>
+    <tr><th>ภัยคุกคาม (รูป 32.1)</th><th>ทำอะไร</th><th>โจมตีคุณสมบัติ</th></tr>
+    <tr><td>Interruption</td><td>ทำให้ระบบใช้ไม่ได้ เช่น ตัดสาย ทำลายดิสก์</td><td>Availability</td></tr>
+    <tr><td>Interception</td><td>ดักฟัง/คัดลอกโดยไม่ได้รับอนุญาต</td><td>Confidentiality</td></tr>
+    <tr><td>Modification</td><td>เข้ามาแก้ข้อมูลระหว่างทาง</td><td>Integrity</td></tr>
+    <tr><td>Fabrication</td><td>ปลอมข้อความแทรกเข้าระบบ</td><td>Authenticity</td></tr>
+  </table></div>
+  <div class="two">
+    <div class="box"><span class="tag">Passive attack</span><p>ดักฟังอย่างเดียว ไม่เปลี่ยนข้อมูล ตรวจจับยาก ป้องกันด้วยการเข้ารหัส</p><ul><li>Release of message contents</li><li>Traffic analysis</li></ul></div>
+    <div class="box"><span class="tag">Active attack</span><p>แก้ไขหรือสร้างข้อมูลปลอม</p><ul><li><b>Masquerade</b> ปลอมตัวเป็นผู้มีสิทธิ์</li><li><b>Replay</b> ดักข้อความแล้วส่งซ้ำภายหลัง</li><li><b>Modification</b> แก้ ชะลอ สลับลำดับข้อความ</li><li><b>Denial of Service</b> ทำให้ใช้บริการไม่ได้</li></ul></div>
+  </div>
+  <h3>Cryptography</h3>
+  <p>plaintext → (encryption + key) → ciphertext → (decryption + key) → plaintext · แบบดั้งเดิม: <b>transposition</b> (สลับตำแหน่ง) และ <b>substitution</b> (แทนตัวอักษร: simple, homophonic, polyalphabetic, polygram)</p>
+  <div class="tw"><table>
+    <tr><th></th><th>Symmetric (secret key)</th><th>Asymmetric (public key)</th></tr>
+    <tr><td>กุญแจ</td><td>ใช้ key เดียวกันทั้งสองฝั่ง</td><td>public key เข้ารหัส / private key ถอด</td></tr>
+    <tr><td>ตัวอย่าง</td><td>DES (block 64 บิต, key 56 บิต ถูก Deep Crack แก้ใน 56 ชม.), 3DES (E-D-E 3 key), AES (block 128, key 128/192/256)</td><td>RSA (อาศัยความยากในการแยกตัวประกอบ)</td></tr>
+    <tr><td>ข้อดี/เสีย</td><td>เร็ว / แจกกุญแจยาก</td><td>แจกกุญแจง่าย / ช้า</td></tr>
+  </table></div>
+  <div class="box"><span class="tag">RSA ตัวเลขเล็ก</span><ol>
+    <li>เลือก p = 3, q = 11 → n = 33, φ(n) = (p−1)(q−1) = 20</li>
+    <li>เลือก e = 3 (เป็นจำนวนเฉพาะสัมพัทธ์กับ 20) → public key {e, n} = {3, 33}</li>
+    <li>หา d ที่ e·d ≡ 1 (mod 20) → d = 7 (3 × 7 = 21) → private key {7, 33}</li>
+    <li>เข้ารหัส P = 4: C = 4³ mod 33 = 64 mod 33 = <b>31</b></li>
+    <li>ถอด: 31⁷ mod 33 = <b>4</b> ได้ข้อความเดิม</li></ol></div>
+  <p><b>Message digest / hash</b>: MD5 ได้ 128 บิต, SHA-1 ได้ 160 บิต ทางเดียว ย้อนหาข้อความไม่ได้ ใช้ตรวจ integrity และทำ digital signature</p>
+  <h3>ความปลอดภัยแต่ละ layer</h3>
+  <div class="tw"><table>
+    <tr><th>Layer</th><th>โปรโตคอล</th><th>สาระสำคัญ</th></tr>
+    <tr><td>Application</td><td>PGP, S/MIME</td><td>เข้ารหัสและลงลายมือชื่ออีเมล</td></tr>
+    <tr><td>Transport</td><td>SSL / TLS</td><td>handshake ตกลง cipher + แลกกุญแจ แล้วเข้ารหัสด้วย record protocol (HTTPS)</td></tr>
+    <tr><td>Network</td><td>IPsec</td><td><b>AH</b> (protocol 51): ยืนยันตัวตน + integrity ไม่เข้ารหัส · <b>ESP</b> (50): เข้ารหัส + (ทางเลือก) auth · <b>Transport mode</b> ป้องกัน payload (host–host) · <b>Tunnel mode</b> ห่อทั้งแพ็กเก็ตใส่เฮดเดอร์ใหม่ (gateway–gateway, VPN) · กุญแจด้วย IKE</td></tr>
+  </table></div>
+  <h3>Firewall และ VPN</h3>
+  <div class="cards">
+    <div class="mini"><span class="k">รุ่นแรก</span><h4>Packet filtering</h4><p>กรองจากเฮดเดอร์ IP/TCP (IP, port) ง่ายแต่กฎซับซ้อนแล้วจัดการยาก</p></div>
+    <div class="mini"><span class="k">ตัวกลาง</span><h4>Proxy</h4><p>เชื่อมต่อแทน client ภายใน ซ่อนเครื่องภายใน</p></div>
+    <div class="mini"><span class="k">L7</span><h4>Application layer firewall</h4><p>ตรวจเนื้อหาของแอป เช่น คำสั่ง HTTP</p></div>
+    <div class="mini"><span class="k">จำสถานะ</span><h4>Stateful inspection</h4><p>ติดตามสถานะการเชื่อมต่อ รับเฉพาะแพ็กเก็ตที่เป็นคำตอบของ session ที่เปิดไว้</p></div>
+  </div>
+  <p><b>VPN</b> = สร้างเครือข่ายส่วนตัวบนอินเทอร์เน็ตสาธารณะด้วย tunneling + เข้ารหัส (IPsec VPN, SSL VPN) ประหยัดกว่าเช่าสายส่วนตัว</p>
+</section>
+
+<!-- ================= Bonus ================= -->
+<section class="ch t-ink" id="bonus">
+  <div class="ch-top"><span class="ch-no">ข้อ 9 + โบนัส</span><button class="readbtn" data-id="bonus" aria-pressed="false">อ่านแล้ว</button></div>
+  <h2>ข้อที่จำไม่ได้ และเกมทายศัพท์</h2>
+  <p>ข้อ 9 ไม่มีข้อมูล หัวข้อที่ยังไม่ถูกถามในข้ออื่นแต่มีคำถามท้ายบทรองรับ น่าทบทวนไว้:</p>
+  <div class="cards">
+    <a class="mini" href="#nat" style="text-decoration:none;color:inherit"><span class="k">บท 19</span><h4>DHCP 4 ขั้น (DORA)</h4><p>src/dst ของแต่ละข้อความ และ option 53</p></a>
+    <a class="mini" href="#ripospf" style="text-decoration:none;color:inherit"><span class="k">บท 21</span><h4>RIP vs OSPF, OSPF area</h4><p>คำถามท้ายบท 18 ข้อ 8–9 ถามตรง ๆ</p></a>
+    <a class="mini" href="#multicast" style="text-decoration:none;color:inherit"><span class="k">บท 22</span><h4>RPF vs RPM, SBT vs GST</h4><p>คำถามท้ายบท 18 ข้อ 10–11</p></a>
+    <a class="mini" href="#ip" style="text-decoration:none;color:inherit"><span class="k">บท 18</span><h4>Virtual circuit, loopback</h4><p>connectionless vs connection-oriented, ATM 53 ไบต์</p></a>
+    <a class="mini" href="#transport" style="text-decoration:none;color:inherit"><span class="k">บท 26</span><h4>UDP vs TCP, พอร์ต</h4><p>ข้อดี UDP, three-way handshake</p></a>
+    <a class="mini" href="#security" style="text-decoration:none;color:inherit"><span class="k">บท 32</span><h4>Attack, Firewall, IPsec</h4><p>passive/active, 4 threats, AH vs ESP</p></a>
+  </div>
+  <h3 id="pics">โบนัส: ทายศัพท์จากรูป</h3>
+  <p class="sub">ลองเดาก่อนกดดูเฉลย รูปในข้อสอบอาจต่างจากนี้ แต่ฝึกให้ชินกับการแปลงภาพเป็นศัพท์</p>
+  <div class="pics">
+    <div class="pic"><svg viewBox="0 0 120 110" aria-hidden="true"><path d="M30,20 L90,20 L82,80 L38,80 Z" class="ln"/><ellipse cx="60" cy="20" rx="30" ry="6" class="ln"/><circle cx="60" cy="90" r="3" style="fill:var(--bl)"/><circle cx="60" cy="102" r="3" style="fill:var(--bl)"/><path d="M60,80 L60,84" class="ln"/></svg><details><summary>ดูเฉลย</summary><p>Leaky bucket</p></details></div>
+    <div class="pic"><svg viewBox="0 0 120 110" aria-hidden="true"><line x1="20" y1="10" x2="20" y2="100" class="ln"/><line x1="100" y1="10" x2="100" y2="100" class="ln"/><path d="M20,22 L98,42" class="lnc"/><path d="M100,50 L22,70" class="lnc"/><path d="M20,78 L98,98" class="lnc"/><text x="60" y="30" class="txm sm" text-anchor="middle">1</text><text x="60" y="56" class="txm sm" text-anchor="middle">2</text><text x="60" y="84" class="txm sm" text-anchor="middle">3</text></svg><details><summary>ดูเฉลย</summary><p>Three-way handshake</p></details></div>
+    <div class="pic"><svg viewBox="0 0 120 110" aria-hidden="true"><rect x="42" y="36" width="36" height="56" rx="8" class="ln"/><rect x="52" y="20" width="16" height="16" class="ln"/><path d="M50,54 l20,20 M70,54 l-20,20" class="lnb"/><path d="M108,64 L88,64" class="lnc"/><path d="M92,58 L86,64 L92,70" class="lnc"/></svg><details><summary>ดูเฉลย</summary><p>Poison reverse</p></details></div>
+    <div class="pic"><svg viewBox="0 0 120 110" aria-hidden="true"><path d="M38,14 L82,14 L60,55 L82,96 L38,96 L60,55 Z" class="ln"/><text x="100" y="40" class="txm b" text-anchor="middle">64</text><text x="100" y="60" class="txm" text-anchor="middle">63</text><text x="100" y="80" class="txm mut" text-anchor="middle">…0</text></svg><details><summary>ดูเฉลย</summary><p>TTL (Time to Live)</p></details></div>
+    <div class="pic"><svg viewBox="0 0 120 110" aria-hidden="true"><g class="ln"><rect x="15" y="60" width="30" height="16"/><rect x="45" y="60" width="30" height="16"/><rect x="75" y="60" width="30" height="16"/><rect x="30" y="76" width="30" height="16"/><rect x="60" y="76" width="30" height="16"/><rect x="15" y="92" width="30" height="12"/><rect x="45" y="92" width="30" height="12"/><rect x="75" y="92" width="30" height="12"/></g><path d="M60,56 C40,40 58,28 52,10 C70,22 80,38 60,56 Z" style="fill:var(--or)"/></svg><details><summary>ดูเฉลย</summary><p>Firewall</p></details></div>
+    <div class="pic"><svg viewBox="0 0 120 110" aria-hidden="true"><path d="M30,55 C30,35 55,35 60,55 C65,75 90,75 90,55 C90,35 65,35 60,55 C55,75 30,75 30,55 Z" class="lnc"/><text x="20" y="100" class="txm sm">1</text><text x="44" y="100" class="txm sm">2</text><text x="68" y="100" class="txm sm">3</text><text x="92" y="100" class="txm sm">…</text></svg><details><summary>ดูเฉลย</summary><p>Count-to-infinity</p></details></div>
+    <div class="pic"><svg viewBox="0 0 120 110" aria-hidden="true"><circle cx="60" cy="18" r="9" class="node"/><path d="M60,27 L30,60 M60,27 L90,60 M30,60 L18,92 M30,60 L42,92 M90,60 L90,92" class="ln"/><circle cx="30" cy="60" r="6" class="ln"/><circle cx="90" cy="60" r="6" class="ln"/><path d="M84,86 l12,12 M96,86 l-12,12" class="lnb"/></svg><details><summary>ดูเฉลย</summary><p>Prune (ตัดกิ่ง multicast tree)</p></details></div>
+    <div class="pic"><svg viewBox="0 0 120 110" aria-hidden="true"><circle cx="30" cy="40" r="10" class="ln"/><path d="M14,80 C14,58 46,58 46,80" class="ln"/><rect x="62" y="28" width="40" height="22" rx="4" class="ln"/><circle cx="74" cy="39" r="4" class="ln"/><circle cx="90" cy="39" r="4" class="ln"/><path d="M50,40 L60,40" class="ln"/></svg><details><summary>ดูเฉลย</summary><p>Masquerade (ปลอมตัว)</p></details></div>
+  </div>
+</section>
+
+<footer>
+  <p>เนื้อหาสรุปจากหนังสือประกอบวิชาบทที่ 17–32, โน้ตสรุป FinalComNet และแนวข้อสอบในรูปที่ได้รับ ตัวเลขในตัวอย่างที่ไม่ได้มาจากหนังสือเป็นค่าสมมติเพื่อฝึกทำ ถ้าตรงไหนต่างจากสไลด์ของอาจารย์ ให้ยึดสไลด์</p>
+</footer>
+</main>
+</div>
+
+<script>
+(function(){
+'use strict';
+var $=function(s,r){return (r||document).querySelector(s)}, $$=function(s,r){return Array.prototype.slice.call((r||document).querySelectorAll(s))};
+function esc(s){return String(s).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]})}
+function sget(k){try{return localStorage.getItem(k)}catch(e){return null}}
+function sset(k,v){try{localStorage.setItem(k,v)}catch(e){}}
+function fmt(x){var r=Math.round(x*10000)/10000;return String(r)}
+
+/* ---------- IPv4 utils ---------- */
+function ip2int(s){var p=String(s).trim().split('.');if(p.length!==4)return null;var n=0;for(var i=0;i<4;i++){if(!/^\d{1,3}$/.test(p[i]))return null;var v=+p[i];if(v>255)return null;n=n*256+v}return n>>>0}
+function int2ip(n){n=n>>>0;return [n>>>24,(n>>>16)&255,(n>>>8)&255,n&255].join('.')}
+function len2mask(l){return l<=0?0:(l>=32?0xFFFFFFFF:((0xFFFFFFFF<<(32-l))>>>0))}
+function mask2len(m){var l=0,z=false;for(var i=31;i>=0;i--){var b=(m>>>i)&1;if(b){if(z)return null;l++}else z=true}return l}
+function bits(n,hl){var s='';for(var i=31;i>=0;i--){s+=((n>>>i)&1)}var out='';for(var j=0;j<32;j++){var ch=s[j];out+=(j<hl?'<b>'+ch+'</b>':ch);if(j%8===7&&j<31)out+='.'}return out}
+
+/* ---------- reading progress ---------- */
+var ids=$$('.readbtn').map(function(b){return b.dataset.id});
+function refreshProg(){var done=0;ids.forEach(function(id){var on=sget('nwf-read-'+id)==='1';if(on)done++;var b=$('.readbtn[data-id="'+id+'"]');if(b){b.setAttribute('aria-pressed',on?'true':'false');b.textContent=on?'อ่านแล้ว ✓':'อ่านแล้ว'}var a=$('.rail a[href="#'+id+'"]');if(a)a.classList.toggle('done',on)});
+  $('#progText').textContent='อ่านแล้ว '+done+' จาก '+ids.length+' หัวข้อ';$('#progBar').style.width=(done/ids.length*100)+'%'}
+$$('.readbtn').forEach(function(b){b.addEventListener('click',function(){var k='nwf-read-'+b.dataset.id;sset(k,sget(k)==='1'?'0':'1');refreshProg()})});
+refreshProg();
+/* current section in rail */
+if('IntersectionObserver' in window){var links={};$$('.rail a').forEach(function(a){links[a.getAttribute('href').slice(1)]=a});
+  var io=new IntersectionObserver(function(es){es.forEach(function(e){if(e.isIntersecting){$$('.rail a.cur').forEach(function(x){x.classList.remove('cur')});var a=links[e.target.id];if(a){a.classList.add('cur');if(window.innerWidth<=980&&a.scrollIntoView){var r=$('nav.rail');r.scrollTo({left:a.offsetLeft-16,behavior:'smooth'})}}}})},{rootMargin:'-30% 0px -60% 0px'});
+  $$('main > header, main > section').forEach(function(s){io.observe(s)})}
+
+/* ---------- subnet calculator ---------- */
+function runSubnet(){var s=$('#sn-in').value.trim(),ip=null,len=null,m;
+  if((m=s.match(/^(\d+\.\d+\.\d+\.\d+)\s*\/\s*(\d{1,2})$/))){ip=ip2int(m[1]);len=+m[2]}
+  else if((m=s.match(/^(\d+\.\d+\.\d+\.\d+)\s+(\d+\.\d+\.\d+\.\d+)$/))){ip=ip2int(m[1]);var mk=ip2int(m[2]);len=mk===null?null:mask2len(mk)}
+  var out=$('#sn-out');
+  if(ip===null||len===null||len>32){out.innerHTML='<p class="warn">ใส่รูปแบบ 192.168.10.77/26 หรือ 192.168.10.77 255.255.255.192 (mask ต้องเป็นบิต 1 ติดกัน)</p>';return}
+  var mask=len2mask(len),net=(ip&mask)>>>0,bc=(net|(~mask>>>0))>>>0;
+  var hosts=len===32?1:(len===31?2:Math.pow(2,32-len)-2);
+  var first=len>=31?net:net+1,last=len>=31?bc:bc-1;
+  var o1=ip>>>24,cls=o1<128?'A':o1<192?'B':o1<224?'C':o1<240?'D':'E',clen={A:8,B:16,C:24}[cls];
+  var priv=((ip&0xFF000000)>>>0)===0x0A000000||((ip&0xFFF00000)>>>0)===0xAC100000||((ip&0xFFFF0000)>>>0)===0xC0A80000;
+  var oct=Math.floor(len/8),blk='';if(len%8!==0){var mv=(mask>>>(24-oct*8))&255;blk='Block size ในไบต์ที่ '+(oct+1)+' = 256 − '+mv+' = '+(256-mv)}
+  var sub=(clen&&len>=clen)?('ยืม '+(len-clen)+' บิตจาก class '+cls+' → '+Math.pow(2,len-clen)+' subnet'):'';
+  out.innerHTML='<div class="tw"><table>'+
+   '<tr><th>รายการ</th><th>ค่า</th></tr>'+
+   '<tr><td>Subnet mask</td><td class="m">'+int2ip(mask)+' (/'+len+')</td></tr>'+
+   '<tr><td>Network address</td><td class="m">'+int2ip(net)+'</td></tr>'+
+   '<tr><td>Broadcast address</td><td class="m">'+int2ip(bc)+'</td></tr>'+
+   '<tr><td>โฮสต์ที่ใช้ได้</td><td class="m">'+int2ip(first)+' – '+int2ip(last)+'</td></tr>'+
+   '<tr><td>จำนวนโฮสต์</td><td>'+(len<31?'2<sup>'+(32-len)+'</sup> − 2 = ':'')+hosts.toLocaleString()+'</td></tr>'+
+   '<tr><td>Wildcard</td><td class="m">'+int2ip((~mask)>>>0)+'</td></tr>'+
+   '<tr><td>Class (ดั้งเดิม)</td><td>'+cls+(priv?' · private (RFC 1918)':'')+'</td></tr>'+
+   (blk?'<tr><td>ทางลัด</td><td>'+blk+'</td></tr>':'')+(sub?'<tr><td>Subnetting</td><td>'+sub+'</td></tr>':'')+
+   '</table></div><div class="bits">IP&nbsp;&nbsp;&nbsp; '+bits(ip,len)+'<br>Mask&nbsp; '+bits(mask,len)+'<br>Net&nbsp;&nbsp; '+bits(net,len)+'</div>'}
+$('#sn-go').addEventListener('click',runSubnet);$('#sn-in').addEventListener('keydown',function(e){if(e.key==='Enter')runSubnet()});
+$$('#sn-chips .chip').forEach(function(c){c.addEventListener('click',function(){$('#sn-in').value=c.textContent;runSubnet()})});
+runSubnet();
+
+/* ---------- longest prefix match ---------- */
+function parseRoutes(text){var rows=[],errs=[];text.split('\n').forEach(function(raw,i){var line=raw.trim();if(!line||line.charAt(0)==='#')return;var tk=line.split(/[\s,]+/),net,len,k=1,t0=tk[0].toLowerCase();
+  if(t0==='default'){net=0;len=0}
+  else if(t0.indexOf('/')>=0){var ab=t0.split('/');net=ip2int(ab[0]);len=ab[1]===''?NaN:+ab[1];if(net===null||!(len>=0&&len<=32)){errs.push(i+1);return}}
+  else{net=ip2int(t0);var mk=tk[1]?ip2int(tk[1]):null;if(net===null||mk===null){errs.push(i+1);return}len=mask2len(mk);if(len===null){errs.push(i+1);return}k=2}
+  var mask=len2mask(len);rows.push({net:(net&mask)>>>0,len:len,mask:mask,hop:tk.slice(k).join(' ')||'—'})});return {rows:rows,errs:errs}}
+function runLPM(){var ip=ip2int($('#lpm-ip').value),pr=parseRoutes($('#lpm-table').value),out=$('#lpm-out');
+  if(ip===null){out.innerHTML='<p class="warn">ใส่ IP ปลายทางเป็น a.b.c.d เช่น 192.168.10.200</p>';return}
+  var best=null,hits=[];pr.rows.forEach(function(r){r.and=(ip&r.mask)>>>0;r.ok=r.and===r.net;if(r.ok){hits.push(r);if(!best||r.len>best.len)best=r}});
+  var h='<div class="tw"><table><tr><th>Destination</th><th>Mask</th><th>Next hop</th><th>IP AND mask</th><th>ตรงไหม</th></tr>';
+  pr.rows.forEach(function(r){h+='<tr class="'+(r===best?'win':(r.ok?'hit':'miss'))+'"><td class="m">'+int2ip(r.net)+'/'+r.len+'</td><td class="m">'+int2ip(r.mask)+'</td><td>'+esc(r.hop)+'</td><td class="m">'+int2ip(r.and)+'</td><td>'+(r.ok?'<span class="ok">ตรง</span>'+(r===best?' · ยาวสุด':''):'<span class="no">ไม่ตรง</span>')+'</td></tr>'});
+  h+='</table></div>';
+  var v;
+  if(best){v='IP <b class="m">'+int2ip(ip)+'</b> ตรงกับ '+hits.length+' entry ('+hits.map(function(r){return '/'+r.len}).join(', ')+') → เลือก <b class="m">'+int2ip(best.net)+'/'+best.len+'</b> เพราะ prefix ยาวที่สุด → ส่งไป <b>'+esc(best.hop)+'</b>'+(best.len===0?' (default route เพราะไม่ตรง entry อื่นเลย)':'');
+    h+='<div class="bits">ปลายทาง&nbsp; '+bits(ip,best.len)+'<br>Entry&nbsp;&nbsp;&nbsp;&nbsp; '+bits(best.net,best.len)+'<br><span style="color:var(--muted)">บิตที่ไฮไลต์ = '+best.len+' บิตแรกที่ต้องตรงกัน</span></div>'}
+  else v='ไม่ตรง entry ใดเลยและไม่มี default route → router <b>ทิ้งแพ็กเก็ต</b> และส่ง ICMP Destination Unreachable (type 3) กลับต้นทาง';
+  if(pr.errs.length)v+='<br><span class="warn">อ่านบรรทัดที่ '+pr.errs.join(', ')+' ไม่ได้ ข้ามไป</span>';
+  out.innerHTML='<div class="verdict">'+v+'</div>'+h}
+$('#lpm-go').addEventListener('click',runLPM);$('#lpm-ip').addEventListener('keydown',function(e){if(e.key==='Enter')runLPM()});$('#lpm-table').addEventListener('input',runLPM);
+$$('#lpm-chips .chip').forEach(function(c){c.addEventListener('click',function(){$('#lpm-ip').value=c.textContent;runLPM()})});
+$('#lpm-rand').addEventListener('click',function(){var rows=parseRoutes($('#lpm-table').value).rows.filter(function(r){return r.len>0});var ip;
+  if(!rows.length||Math.random()<0.15){ip=(Math.floor(Math.random()*223)+1)*16777216+Math.floor(Math.random()*16777216)}
+  else{var r=rows[Math.floor(Math.random()*rows.length)];var hostBits=(~r.mask)>>>0;var rnd=Math.floor(Math.random()*4294967296)>>>0;ip=(r.net|(rnd&hostBits))>>>0;
+    if(Math.random()<0.3&&r.len>8){ip=(ip^(1<<(32-r.len)))>>>0}}
+  $('#lpm-ip').value=int2ip(ip);runLPM()});
+runLPM();
+
+/* ---------- NAT stepper ---------- */
+var natSteps=[
+ {cap:'1) PC A ส่งแพ็กเก็ตจาก 192.168.0.1 พอร์ต 3345 ไปเว็บเซิร์ฟเวอร์พอร์ต 80 ช่วงนี้ยังเป็น private IP',link:'natL1',inS:'192.168.0.1:3345',inD:'12.119.40.186:80',inDir:'→ ขาออก',rows:0},
+ {cap:'2) Router ทำ NAT เปลี่ยน SOURCE เป็น 202.76.29.7:8001 แล้วบันทึกลงตาราง ปลายทางคงเดิม',link:'natL3',inS:'192.168.0.1:3345',inD:'12.119.40.186:80',inDir:'→ ขาออก',outS:'202.76.29.7:8001',outD:'12.119.40.186:80',outDir:'→ ขาออก',chg:'outS',rows:1},
+ {cap:'3) เซิร์ฟเวอร์ตอบกลับไปที่ 202.76.29.7:8001 เพราะเห็นแค่ public IP ของ NAT',link:'natL3',outS:'12.119.40.186:80',outD:'202.76.29.7:8001',outDir:'← ขากลับ',rows:1},
+ {cap:'4) Router เปิดตาราง NAT เจอ 8001 = 192.168.0.1:3345 จึงเปลี่ยน DESTINATION กลับแล้วส่งให้ PC A',link:'natL1',inS:'12.119.40.186:80',inD:'192.168.0.1:3345',inDir:'← ขากลับ',outS:'12.119.40.186:80',outD:'202.76.29.7:8001',outDir:'← ขากลับ',chg:'inD',rows:1},
+ {cap:'5) PC B ใช้พอร์ต 3345 เหมือนกัน NAT แยกด้วยพอร์ตใหม่ 8002 นี่คือ PAT (NAT overload)',link:'natL2',inS:'192.168.0.2:3345',inD:'12.119.40.186:80',inDir:'→ ขาออก',outS:'202.76.29.7:8002',outD:'12.119.40.186:80',outDir:'→ ขาออก',chg:'outS',rows:2}];
+var natI=0;
+function natRender(){var s=natSteps[natI];['natL1','natL2','natL3'].forEach(function(id){$('#'+id).classList.toggle('active-link',id===s.link||(natI===1&&id==='natL1')||(natI===3&&id==='natL3')||(natI===4&&id==='natL3'))});
+  function set(id,val,key){var el=$('#'+id);el.textContent=val||'—';el.classList.toggle('chg',s.chg===key)}
+  set('natInSrc',s.inS,'inS');set('natInDst',s.inD,'inD');set('natOutSrc',s.outS,'outS');set('natOutDst',s.outD,'outD');
+  $('#natInDir').textContent=s.inDir||'';$('#natOutDir').textContent=s.outDir||'';
+  $$('#natTable tr[data-row]').forEach(function(tr){var n=+tr.dataset.row;tr.style.opacity=n<=s.rows?'1':'.25';tr.classList.toggle('win',n===s.rows&&!!s.chg&&s.chg==='outS')});
+  $('#natCap').textContent=s.cap;$('#natCt').textContent=(natI+1)+'/'+natSteps.length;$('#natPrev').disabled=natI===0;$('#natNext').disabled=natI===natSteps.length-1}
+$('#natPrev').addEventListener('click',function(){if(natI>0){natI--;natRender()}});$('#natNext').addEventListener('click',function(){if(natI<natSteps.length-1){natI++;natRender()}});
+natRender();
+
+/* ---------- Bellman-Ford neighbor update ---------- */
+function parseVec(t,withHop){var r=[];t.split('\n').forEach(function(l){var tk=l.trim().split(/[\s,]+/);if(!tk[0])return;var c=tk[1]==='∞'||/^inf/i.test(tk[1]||'')?Infinity:+tk[1];if(isNaN(c))return;r.push({d:tk[0],c:c,h:withHop?(tk[2]||'—'):''})});return r}
+function cstr(c){return c===Infinity?'∞':String(c)}
+function runBF(){var mine=parseVec($('#bf-mine').value,true),nb=parseVec($('#bf-nb').value,false),N=$('#bf-name').value.trim()||'C',lc=+$('#bf-cost').value||0,rip=$('#bf-rip').checked;
+  var map={};mine.forEach(function(r){map[r.d]=r});var nbm={};nb.forEach(function(r){nbm[r.d]=r});
+  var order=mine.map(function(r){return r.d});nb.forEach(function(r){if(order.indexOf(r.d)<0)order.push(r.d)});
+  var h='<div class="tw"><table><tr><th>ปลายทาง</th><th>ตารางเดิม</th><th>'+esc(N)+' บอก</th><th>ผ่าน '+esc(N)+' (+'+lc+')</th><th>ผลลัพธ์</th><th>เหตุผล</th></tr>',changed=0;
+  order.forEach(function(d){var o=map[d],n=nbm[d],res,why,cls='';
+    if(!n){res=o;why=esc(N)+' ไม่ได้ส่งปลายทางนี้มา → คงเดิม';cls='miss'}
+    else{var nc=n.c+lc;if(rip&&nc>=16)nc=16;var ncs=(rip&&nc>=16)?'16 (∞)':cstr(nc);
+      if(!o){res={c:nc,h:N};why='ปลายทางใหม่ → เพิ่ม';cls='win';changed++}
+      else if(o.h===N){res={c:nc,h:N};if(nc===o.c){why='next hop เดิมคือ '+esc(N)+' ค่าเท่าเดิม';cls='miss'}else{why='next hop เดิมคือ '+esc(N)+' → ต้องเชื่อค่าใหม่'+(nc>o.c?' <b>แม้แย่ลง</b>':'');cls='win';changed++}}
+      else if(nc<o.c){res={c:nc,h:N};why=ncs+' &lt; '+cstr(o.c)+' → เปลี่ยนไปใช้ '+esc(N);cls='win';changed++}
+      else{res=o;why=(nc===o.c?'เท่ากัน':'แพงกว่า')+' ('+ncs+' vs '+cstr(o.c)+') → คงเดิม';cls='miss'}}
+    h+='<tr class="'+cls+'"><td class="m">'+esc(d)+'</td><td class="m">'+(o?cstr(o.c)+' via '+esc(o.h):'—')+'</td><td class="m">'+(n?cstr(n.c):'—')+'</td><td class="m">'+(n?((rip&&n.c+lc>=16)?'16 (∞)':cstr(n.c+lc)):'—')+'</td><td class="m"><b>'+cstr(res.c===16&&rip?16:res.c)+' via '+esc(res.h)+'</b></td><td>'+why+'</td></tr>'});
+  h+='</table></div>';$('#bf-out').innerHTML='<div class="verdict">เปลี่ยน '+changed+' แถว จาก '+order.length+' แถว แถวสีเขียวคือแถวที่ตารางใหม่ต่างจากเดิม</div>'+h}
+$('#bf-go').addEventListener('click',runBF);['#bf-mine','#bf-nb','#bf-name','#bf-cost','#bf-rip'].forEach(function(s){$(s).addEventListener('input',runBF);$(s).addEventListener('change',runBF)});
+runBF();
+
+/* ---------- RTT ---------- */
+function runRTT(){var a=+$('#rtt-a').value,b=+$('#rtt-b').value,est=+$('#rtt-est').value,dev=+$('#rtt-dev').value,mode=($('input[name=rttmode]:checked')||{}).value||'new';
+  var ss=$('#rtt-s').value.split(/[\s,;]+/).filter(Boolean).map(Number),out=$('#rtt-out');
+  if(!ss.length||ss.some(isNaN)||isNaN(a)||isNaN(b)||isNaN(est)||isNaN(dev)){out.innerHTML='<p class="warn">ใส่ตัวเลขให้ครบ SampleRTT คั่นด้วยจุลภาค</p>';return}
+  var h='<div class="tw"><table><tr><th class="num">#</th><th class="num">Sample</th><th>EstimatedRTT</th><th>DevRTT</th><th class="num">Timeout</th></tr>';
+  ss.forEach(function(s,i){var e0=est;est=(1-a)*e0+a*s;var ref=mode==='new'?est:e0;var d0=dev;dev=(1-b)*d0+b*Math.abs(s-ref);var to=est+4*dev;
+    h+='<tr><td class="num">'+(i+1)+'</td><td class="num m">'+fmt(s)+'</td><td class="m">'+fmt(1-a)+'×'+fmt(e0)+' + '+fmt(a)+'×'+fmt(s)+' = <b>'+fmt(est)+'</b></td><td class="m">'+fmt(1-b)+'×'+fmt(d0)+' + '+fmt(b)+'×|'+fmt(s)+'−'+fmt(ref)+'| = <b>'+fmt(dev)+'</b></td><td class="num m"><b>'+fmt(to)+'</b></td></tr>'});
+  h+='</table></div>';out.innerHTML='<div class="verdict">หลัง '+ss.length+' ตัวอย่าง: EstimatedRTT = <b>'+fmt(est)+'</b>, DevRTT = <b>'+fmt(dev)+'</b>, Timeout = '+fmt(est)+' + 4×'+fmt(dev)+' = <b>'+fmt(est+4*dev)+'</b></div>'+h}
+$('#rtt-go').addEventListener('click',runRTT);$$('#rtt-est,#rtt-dev,#rtt-a,#rtt-b,#rtt-s').forEach(function(el){el.addEventListener('input',runRTT)});$$('input[name=rttmode]').forEach(function(el){el.addEventListener('change',runRTT)});
+runRTT();
+
+/* ---------- cwnd chart ---------- */
+var SVGNS='http://www.w3.org/2000/svg';
+function sv(tag,attrs,text){var e=document.createElementNS(SVGNS,tag);for(var k in attrs)e.setAttribute(k,attrs[k]);if(text!=null)e.textContent=text;return e}
+function simCwnd(ss,N,evs){var cw=1,th=ss,out=[];for(var r=1;r<=N;r++){var ev=null;evs.forEach(function(e){if(e.r===r)ev=e.t});out.push({r:r,cw:cw,th:th,ph:cw<th?'SS':'CA',ev:ev});
+  if(ev){th=Math.max(Math.floor(cw/2),2);cw=ev==='to'?1:th}else{cw=cw<th?Math.min(cw*2,th):cw+1}}return out}
+function niceMax(v){var c=[5,10,15,20,25,30,40,50,60,80,100,120,150,200,250,300,400,500];for(var i=0;i<c.length;i++)if(c[i]>=v*1.08)return c[i];return Math.ceil(v*1.1/100)*100}
+function runCwnd(){var ss=Math.max(2,+$('#cw-ss').value||16),N=Math.min(60,Math.max(5,+$('#cw-n').value||20)),evs=[];
+  [['#cw-e1','#cw-t1'],['#cw-e2','#cw-t2']].forEach(function(p){var r=+$(p[0]).value,t=$(p[1]).value;if(t!=='none'&&r>=1&&r<=N)evs.push({r:r,t:t})});
+  var d=simCwnd(ss,N,evs),svg=$('#cwSvg');while(svg.firstChild)svg.removeChild(svg.firstChild);
+  var W=680,H=330,ml=46,mr=18,mt=22,mb=46,ymax=niceMax(Math.max.apply(null,d.map(function(x){return Math.max(x.cw,x.th)})));
+  function X(r){return ml+(r-1)*(W-ml-mr)/Math.max(N-1,1)}function Y(v){return mt+(H-mt-mb)*(1-v/ymax)}
+  for(var i=0;i<=5;i++){var v=ymax*i/5,y=Y(v);svg.appendChild(sv('line',{x1:ml,y1:y,x2:W-mr,y2:y,style:'stroke:var(--line);stroke-width:1'}));svg.appendChild(sv('text',{x:ml-8,y:y+4,'text-anchor':'end',class:'txm sm mut'},fmt(v)))}
+  var step=N>30?5:(N>16?2:1);d.forEach(function(p){if((p.r-1)%step===0||p.r===N)svg.appendChild(sv('text',{x:X(p.r),y:H-mb+18,'text-anchor':'middle',class:'txm sm mut'},p.r))});
+  svg.appendChild(sv('text',{x:(ml+W-mr)/2,y:H-8,'text-anchor':'middle',class:'tx sm mut'},'รอบการส่ง (RTT)'));
+  svg.appendChild(sv('text',{x:14,y:mt+(H-mt-mb)/2,'text-anchor':'middle',class:'tx sm mut',transform:'rotate(-90 14 '+(mt+(H-mt-mb)/2)+')'},'cwnd (MSS)'));
+  /* events */
+  d.forEach(function(p){if(p.ev){var x=X(p.r);svg.appendChild(sv('line',{x1:x,y1:mt,x2:x,y2:H-mb,style:'stroke:var(--bad);stroke-width:1.2;stroke-dasharray:3 4'}));svg.appendChild(sv('text',{x:x+5,y:mt+10,class:'tx sm halo',style:'fill:var(--bad)'},p.ev==='to'?'Timeout':'3 dup ACK'))}});
+  /* ssthresh step line */
+  var pts=[];d.forEach(function(p,i){var x0=i===0?X(1):(X(p.r)+X(p.r-1))/2,x1=i===d.length-1?X(p.r):(X(p.r)+X(p.r+1))/2;pts.push(x0+','+Y(p.th));pts.push(x1+','+Y(p.th))});
+  svg.appendChild(sv('polyline',{points:pts.join(' '),style:'fill:none;stroke:var(--or);stroke-width:2;stroke-dasharray:6 5'}));
+  var lastTh=d[d.length-1].th;svg.appendChild(sv('text',{x:W-mr-2,y:Y(lastTh)+16,'text-anchor':'end',class:'txm sm halo',style:'fill:var(--or)'},'ssthresh = '+lastTh));
+  /* cwnd */
+  svg.appendChild(sv('polyline',{points:d.map(function(p){return X(p.r)+','+Y(p.cw)}).join(' '),style:'fill:none;stroke:var(--ink);stroke-width:1.6;opacity:.55'}));
+  d.forEach(function(p){svg.appendChild(sv('circle',{cx:X(p.r),cy:Y(p.cw),r:4.2,style:'fill:'+(p.ph==='SS'?'var(--bl)':'var(--gr)')+';stroke:var(--card);stroke-width:1.5'}));if(N<=26)svg.appendChild(sv('text',{x:X(p.r),y:Y(p.cw)-9,'text-anchor':'middle',class:'txm sm halo'},p.cw))});
+  var h='<div class="tw"><table><tr><th>รอบ</th>'+d.map(function(p){return '<th class="num">'+p.r+'</th>'}).join('')+'</tr><tr><td>cwnd</td>'+d.map(function(p){return '<td class="num m" style="color:'+(p.ph==='SS'?'var(--bl)':'var(--gr)')+'">'+p.cw+'</td>'}).join('')+'</tr><tr><td>ssthresh</td>'+d.map(function(p){return '<td class="num m">'+p.th+'</td>'}).join('')+'</tr><tr><td>เหตุการณ์</td>'+d.map(function(p){return '<td class="num" style="color:var(--bad);font-size:12px">'+(p.ev==='to'?'TO':p.ev==='dup'?'3dup':'')+'</td>'}).join('')+'</tr></table></div>';
+  $('#cw-out').innerHTML=h}
+$('#cw-go').addEventListener('click',runCwnd);$$('#cw-ss,#cw-n,#cw-e1,#cw-t1,#cw-e2,#cw-t2').forEach(function(el){el.addEventListener('input',runCwnd);el.addEventListener('change',runCwnd)});
+runCwnd();
+
+/* ---------- fast retransmit stepper ---------- */
+var frCaps=['ผู้ส่งยิง segment 1201–1601 ออกไปทั้ง window (segment ละ 100 ไบต์) แต่ Seq 1301 หายกลางทาง',
+ 'ผู้รับได้ 1201 ตอบ ACK 1301 (อยากได้ไบต์ 1301 ต่อ) นี่คือ ACK ครั้งแรกตามปกติ',
+ 'ได้ 1401 แต่ยังขาด 1301 → เก็บ 1401 ไว้ในบัฟเฟอร์แล้วตอบ ACK 1301 ซ้ำเป็นครั้งที่ 1',
+ 'ได้ 1501 → ACK 1301 ซ้ำครั้งที่ 2',
+ 'ได้ 1601 → ACK 1301 ซ้ำครั้งที่ 3 รวมเป็น ACK 1301 ทั้งหมด 1+3 = 4 ครั้ง',
+ 'ครบ 3 duplicate ACK ผู้ส่งส่ง Seq 1301 ใหม่ทันที ไม่รอ timeout (fast retransmit) และเข้า fast recovery: cwnd ลดครึ่ง',
+ 'ผู้รับได้ 1301 ข้อมูลครบถึง 1700 จึงตอบ ACK 1701 (cumulative) ไม่ต้องส่ง 1401–1601 ซ้ำ'];
+var frI=1;
+function frRender(){$$('#frSvg [data-st]').forEach(function(g){g.classList.toggle('hide',+g.dataset.st>frI)});$('#frCap').textContent=frCaps[frI-1];$('#frCt').textContent=frI+'/7';$('#frPrev').disabled=frI===1;$('#frNext').disabled=frI===7}
+$('#frPrev').addEventListener('click',function(){if(frI>1){frI--;frRender()}});$('#frNext').addEventListener('click',function(){if(frI<7){frI++;frRender()}});$('#frAll').addEventListener('click',function(){frI=7;frRender()});
+frRender();
+
+/* ---------- IPv6 tools ---------- */
+function v6expand(s){s=s.trim();var plen='',sl=s.indexOf('/');if(sl>=0){plen=s.slice(sl);s=s.slice(0,sl)}
+  if((s.match(/::/g)||[]).length>1)return {err:'ใช้ :: ได้แค่ครั้งเดียวในหนึ่งแอดเดรส'};
+  var tail=[],m4=s.match(/(\d+\.\d+\.\d+\.\d+)$/);if(m4){var n=ip2int(m4[1]);if(n===null)return {err:'ส่วน IPv4 ท้ายแอดเดรสไม่ถูกต้อง'};tail=[(n>>>16).toString(16),(n&65535).toString(16)];s=s.slice(0,s.length-m4[1].length);if(/[^:]:$/.test(s))s=s.slice(0,-1)}
+  var g;if(s.indexOf('::')>=0){var lr=s.split('::'),L=lr[0]?lr[0].split(':'):[],R=lr[1]?lr[1].split(':'):[],fill=8-tail.length-L.length-R.length;if(fill<1)return {err:'มีกลุ่มมากเกินไปสำหรับ ::'};g=L.concat(Array(fill).fill('0'),R,tail)}
+  else{g=(s?s.split(':'):[]).concat(tail);if(g.length!==8)return {err:'ต้องมี 8 กลุ่ม (ตอนนี้มี '+g.length+')'}}
+  for(var i=0;i<8;i++)if(!/^[0-9a-f]{1,4}$/i.test(g[i]))return {err:'กลุ่ม "'+esc(g[i])+'" ไม่ใช่เลขฐาน 16 ไม่เกิน 4 หลัก'};
+  return {full:g.map(function(x){return ('0000'+x).slice(-4).toUpperCase()}),plen:plen}}
+function v6compress(full){var g=full.map(function(x){return x.replace(/^0+(?=.)/,'')}),bs=-1,bl=0,cs=-1,cl=0;
+  for(var i=0;i<8;i++){if(g[i]==='0'){if(cs<0){cs=i;cl=1}else cl++;if(cl>bl){bl=cl;bs=cs}}else{cs=-1;cl=0}}
+  if(bl>=2)return g.slice(0,bs).join(':')+'::'+g.slice(bs+bl).join(':');return g.join(':')}
+function v6type(full){var v=full.map(function(x){return parseInt(x,16)}),f=v[0];
+  if(v.every(function(x,i){return i<7?x===0:true})){if(v[7]===1)return 'Loopback (::1)';if(v[7]===0)return 'Unspecified (::)'}
+  if(v.slice(0,5).every(function(x){return x===0})&&v[5]===65535)return 'IPv4-mapped (::FFFF:a.b.c.d)';
+  if((f&0xFF00)===0xFF00){var sc=f&15,sn={1:'interface-local',2:'link-local',5:'site-local',8:'organization',14:'global'}[sc]||'scope '+sc;return 'Multicast (FF00::/8) · scope = '+sn+((f&0x10)?' · flag T=1 ชั่วคราว':' · ถาวร')}
+  if((f&0xFFC0)===0xFE80)return 'Link-local unicast (FE80::/10)';if((f&0xFE00)===0xFC00)return 'Unique local (FC00::/7)';if((f&0xE000)===0x2000)return 'Global unicast (2000::/3)';
+  if(v.slice(0,6).every(function(x){return x===0}))return 'IPv4-compatible (::a.b.c.d)';return 'ช่วงอื่น / สงวนไว้'}
+function runV6(){var r=v6expand($('#v6-in').value),out=$('#v6-out');if(r.err){out.innerHTML='<p class="warn">'+r.err+'</p>';return}
+  var c=v6compress(r.full);out.innerHTML='<div class="tw"><table><tr><th>แบบ</th><th>ค่า</th></tr><tr><td>เต็ม (8 กลุ่ม)</td><td class="m">'+r.full.join(':')+esc(r.plen)+'</td></tr><tr><td>ตัด 0 นำหน้า</td><td class="m">'+r.full.map(function(x){return x.replace(/^0+(?=.)/,'')}).join(':')+esc(r.plen)+'</td></tr><tr><td>ย่อสุด (::)</td><td class="m"><b>'+c+esc(r.plen)+'</b></td></tr><tr><td>ชนิด</td><td>'+v6type(r.full)+'</td></tr></table></div>'}
+$('#v6-go').addEventListener('click',runV6);$('#v6-in').addEventListener('keydown',function(e){if(e.key==='Enter')runV6()});
+$$('#v6-chips .chip').forEach(function(c){c.addEventListener('click',function(){$('#v6-in').value=c.textContent;runV6()})});runV6();
+function runEUI(){var hex=$('#eui-mac').value.replace(/[^0-9a-f]/gi,''),out=$('#eui-out');if(hex.length!==12){out.innerHTML='<p class="warn">MAC ต้องมี 12 หลักฐาน 16 เช่น 00:0A:95:F5:E9:6E</p>';return}
+  var b=hex.match(/../g).map(function(x){return parseInt(x,16)}),fb=b[0]^2,by=[fb,b[1],b[2],0xFF,0xFE,b[3],b[4],b[5]];
+  function h2(n){return ('0'+n.toString(16)).slice(-2).toUpperCase()}function b8(n){return ('0000000'+n.toString(2)).slice(-8)}
+  var iid=[0,2,4,6].map(function(i){return h2(by[i])+h2(by[i+1])});
+  var pr=v6expand($('#eui-pre').value),pre=pr.err?null:pr.full.slice(0,4);
+  var full=pre?pre.concat(iid):null;
+  out.innerHTML='<ol class="steps" style="margin-top:6px">'+
+   '<li><div>แบ่ง MAC: <span class="m">'+h2(b[0])+h2(b[1])+h2(b[2])+' | '+h2(b[3])+h2(b[4])+h2(b[5])+'</span></div></li>'+
+   '<li><div>แทรก FFFE: <span class="m">'+h2(b[0])+h2(b[1])+':'+h2(b[2])+'FF:FE'+h2(b[3])+':'+h2(b[4])+h2(b[5])+'</span></div></li>'+
+   '<li><div>กลับบิต U/L ไบต์แรก: <span class="m">'+b8(b[0]).slice(0,6)+'<mark>'+b8(b[0]).charAt(6)+'</mark>'+b8(b[0]).charAt(7)+' → '+b8(fb).slice(0,6)+'<mark>'+b8(fb).charAt(6)+'</mark>'+b8(fb).charAt(7)+'</span> ('+h2(b[0])+' → '+h2(fb)+') ได้ interface ID <b class="m">'+iid.join(':')+'</b></div></li>'+
+   '<li><div>'+(full?'ต่อกับ prefix: <span class="m">'+full.join(':')+'</span> = <b class="m">'+v6compress(full)+'</b>':'<span class="warn">prefix อ่านไม่ได้: '+pr.err+'</span>')+'</div></li></ol>'}
+$('#eui-go').addEventListener('click',runEUI);$$('#eui-mac,#eui-pre').forEach(function(el){el.addEventListener('input',runEUI)});runEUI();
+
+/* ---------- flashcards ---------- */
+var FC=[
+ ['v4','IPv4 address มีกี่บิต เขียนอย่างไร','32 บิต แบ่ง 4 octet เขียนเป็นเลขฐาน 10 คั่นด้วยจุด'],
+ ['v4','เฮดเดอร์ IPv4 ยาวเท่าไร','20–60 ไบต์ (ไม่มี option = 20 ไบต์, IHL = 5)'],
+ ['v4','ค่า Protocol ของ ICMP / TCP / UDP','1 / 6 / 17'],
+ ['v4','TTL ทำหน้าที่อะไร','ลดลง 1 ทุก hop ถึง 0 แล้วทิ้ง + ส่ง ICMP Time exceeded (type 11) กันแพ็กเก็ตวนลูป'],
+ ['v4','Fragment offset ใช้หน่วยอะไร','8 ไบต์ (ฟิลด์ 13 บิต) ข้อมูลแต่ละ fragment ยกเว้นตัวสุดท้ายจึงต้องหาร 8 ลงตัว'],
+ ['v4','DF = 1 แต่แพ็กเก็ตใหญ่กว่า MTU','router ทิ้งแพ็กเก็ตและส่ง ICMP Destination unreachable (fragmentation needed)'],
+ ['v4','Class B ไบต์แรกช่วงไหน default mask อะไร','128–191, 255.255.0.0 (/16), โฮสต์ 2¹⁶ − 2'],
+ ['v4','Class D ใช้ทำอะไร ช่วงไหน','Multicast, 224.0.0.0 – 239.255.255.255'],
+ ['v4','Private IP ตาม RFC 1918','10.0.0.0/8, 172.16.0.0/12, 192.168.0.0/16'],
+ ['v4','127.0.0.1 คืออะไร มีประโยชน์อย่างไร','Loopback สื่อสารภายในเครื่อง ไม่ลง Physical layer ใช้ทดสอบโปรแกรม/TCP-IP stack'],
+ ['v4','169.254.x.x มาจากไหน','Link-local (APIPA) เครื่องตั้งเองเมื่อหา DHCP server ไม่เจอ'],
+ ['v4','/26 มีโฮสต์ใช้ได้กี่เครื่อง','2⁶ − 2 = 62 เครื่อง (block size 64)'],
+ ['v4','CIDR / supernetting มีไว้ทำไม','รวมหลายเน็ตเวิร์กเป็น entry เดียว ลดขนาด routing table เลิกแบ่งเป็นคลาส'],
+ ['v4','ping ใช้ ICMP type อะไร','Echo request = 8, Echo reply = 0'],
+ ['v4','ARP ทำอะไร Ethernet type เท่าไร','รู้ IP หา MAC, 0x0806 · query = broadcast, reply = unicast'],
+ ['v4','router เลือก entry อย่างไรเมื่อ IP ตรงหลายแถว','Longest prefix match เลือก prefix ยาวที่สุด ไม่ตรงเลยใช้ default 0.0.0.0/0'],
+ ['v6','IPv6 address มีกี่บิต เขียนอย่างไร','128 บิต 8 กลุ่ม กลุ่มละ 16 บิต เลขฐาน 16 คั่นด้วย :'],
+ ['v6','เฮดเดอร์ IPv6 ยาวเท่าไร','คงที่ 40 ไบต์ มี 8 ฟิลด์ ส่วนเสริมไปอยู่ใน extension header'],
+ ['v6','ฟิลด์ IPv4 ที่ไม่มีในเฮดเดอร์หลัก IPv6','Header checksum, IHL, Identification/Flags/Fragment offset (ย้ายไป Fragment header), Options'],
+ ['v6','TTL, Protocol, ToS ของ IPv4 ตรงกับอะไรใน IPv6','Hop limit, Next header, Traffic class'],
+ ['v6','Flow label กี่บิต ใช้ทำอะไร','20 บิต ระบุ flow ให้ router จัดการแบบเดียวกันเพื่อ QoS'],
+ ['v6','ใครทำ fragmentation ใน IPv6','ต้นทางเท่านั้น (Fragment header) router ไม่แบ่ง ส่ง ICMPv6 Packet too big กลับแทน'],
+ ['v6','แอดเดรส IPv6 มีกี่ประเภท','3 ประเภท: Unicast, Multicast, Anycast · ไม่มี broadcast'],
+ ['v6','Anycast ส่งถึงใคร','สมาชิกในกลุ่มที่ใกล้ที่สุดตัวเดียว (ใช้กับ router, เป็น source ไม่ได้)'],
+ ['v6','Link-local prefix','FE80::/10 ใช้ในลิงก์เดียว ไม่ถูก route ออกไป'],
+ ['v6','Global unicast prefix และโครงสร้าง','2000::/3 · 48 บิต global routing prefix + 16 บิต subnet + 64 บิต interface ID'],
+ ['v6','Loopback และ unspecified ของ IPv6','::1 และ ::'],
+ ['v6','Multicast prefix และ all-nodes / all-routers','FF00::/8 · FF02::1 ทุกโนด, FF02::2 ทุก router'],
+ ['v6','กฎย่อ IPv6','ตัด 0 นำหน้าในกลุ่มได้ และใช้ :: แทนกลุ่ม 0 ติดกันได้ครั้งเดียว'],
+ ['v6','EUI-64 สร้าง interface ID อย่างไร','แบ่ง MAC 24|24 แทรก FFFE กลับบิตที่ 7 (U/L) ของไบต์แรก เช่น 00 → 02'],
+ ['v6','Stateless autoconfiguration ทำอย่างไร','สร้าง link-local เอง → DAD → ส่ง RS → router ตอบ RA บอก prefix → ต่อด้วย interface ID'],
+ ['v6','Neighbor Discovery ใช้แทนอะไร','ARP (NS/NA), router discovery (RS/RA), redirect · ICMPv6 type 133–137'],
+ ['v6','วิธีให้ IPv4 กับ IPv6 อยู่ร่วมกัน','Dual stack, Tunneling (ห่อ v6 ใน v4), Header translation'],
+ ['v6','IPv4-mapped address เขียนอย่างไร','::FFFF:a.b.c.d เช่น ::FFFF:1.2.3.4']];
+var fcFilter='all';
+function fcRender(){var box=$('#fc');box.innerHTML='';FC.forEach(function(c,i){if(fcFilter!=='all'&&c[0]!==fcFilter)return;var b=document.createElement('button');b.className='card';b.type='button';b.setAttribute('aria-expanded','false');
+  b.innerHTML='<span class="t">'+(c[0]==='v4'?'IPv4':'IPv6')+'</span><span class="q">'+esc(c[1])+'</span><span class="a">'+esc(c[2])+'</span>';
+  b.addEventListener('click',function(){b.setAttribute('aria-expanded',b.getAttribute('aria-expanded')==='true'?'false':'true')});box.appendChild(b)})}
+$$('.seg button[data-f]').forEach(function(b){b.addEventListener('click',function(){fcFilter=b.dataset.f;$$('.seg button[data-f]').forEach(function(x){x.setAttribute('aria-pressed',x===b?'true':'false')});fcRender()})});
+$('#fc-shuf').addEventListener('click',function(){for(var i=FC.length-1;i>0;i--){var j=Math.floor(Math.random()*(i+1)),t=FC[i];FC[i]=FC[j];FC[j]=t}fcRender()});
+$('#fc-open').addEventListener('click',function(){var cards=$$('#fc .card'),anyClosed=cards.some(function(c){return c.getAttribute('aria-expanded')==='false'});cards.forEach(function(c){c.setAttribute('aria-expanded',anyClosed?'true':'false')});this.textContent=anyClosed?'ปิดเฉลยทั้งหมด':'เปิดเฉลยทั้งหมด'});
+fcRender();
+
+/* ---------- matching game ---------- */
+var PAIRS=[['FIFO','มาก่อนได้บริการก่อน มีคิวเดียว'],['Priority queue','ส่งคิวสำคัญสูงให้หมดก่อน คิวต่ำอาจไม่ได้บริการเลย'],['Round robin','วนให้บริการทีละคลาสตามลำดับ'],['WFQ','วนให้บริการตามสัดส่วนน้ำหนักของแต่ละคิว'],['Leaky bucket','ส่งออกอัตราคงที่ ทำ burst ให้เรียบ ล้นถังก็ทิ้ง'],['Token bucket','สะสม token ไว้ได้ จึงปล่อย burst ได้ตามจำนวน token'],['IntServ','รับประกัน QoS แบบ per-flow ด้วยการจองทรัพยากร'],['DiffServ','แบ่งทราฟฟิกเป็นคลาสด้วย DSCP ให้บริการแบบ per-class'],['RSVP','โปรโตคอลจองทรัพยากร ใช้ PATH และ RESV ผู้รับเป็นผู้จอง'],['DSCP','6 บิตแรกของ DS field ระบุคลาสบริการ'],['EF PHB','บริการพรีเมียม delay/loss/jitter ต่ำ DSCP 101110'],['AF PHB','4 คลาส × 3 ระดับการทิ้ง รวม 12 ค่า'],['DE PHB','best effort ปกติ DSCP 000000'],['Admission control','ตัดสินใจรับหรือไม่รับ flow ตามทรัพยากรที่มี'],['Classifier','คัดแยกแพ็กเก็ตจากข้อมูลในเฮดเดอร์'],['Meter','วัดว่าทราฟฟิกเป็นไปตาม profile ที่ตกลงไหม'],['Marker','เขียนค่า DSCP ลงในแพ็กเก็ต'],['Shaper/Dropper','หน่วงแพ็กเก็ตให้เรียบ หรือทิ้งเมื่อเกิน'],['Jitter','ความผันผวนของเวลาหน่วง'],['Throughput','ปริมาณข้อมูลที่ส่งสำเร็จต่อหน่วยเวลา'],['SLA','ข้อตกลงระดับบริการระหว่างลูกค้ากับ ISP'],['Soft state','สถานะที่ต้องส่ง refresh เป็นระยะ ไม่งั้นหมดอายุ']];
+var mg={sel:null,ok:0,miss:0,n:6};
+function shuffle(a){a=a.slice();for(var i=a.length-1;i>0;i--){var j=Math.floor(Math.random()*(i+1)),t=a[i];a[i]=a[j];a[j]=t}return a}
+function mgNew(){var set=shuffle(PAIRS).slice(0,mg.n);mg.sel=null;mg.ok=0;mg.miss=0;var T=$('#mg-terms'),D=$('#mg-defs');T.innerHTML='';D.innerHTML='';
+  shuffle(set).forEach(function(p){var b=document.createElement('button');b.className='mg-term';b.type='button';b.textContent=p[0];b.dataset.k=p[0];b.setAttribute('aria-pressed','false');
+    b.addEventListener('click',function(){if(b.classList.contains('matched'))return;$$('.mg-term').forEach(function(x){x.setAttribute('aria-pressed','false')});b.setAttribute('aria-pressed','true');mg.sel=b});T.appendChild(b)});
+  shuffle(set).forEach(function(p){var b=document.createElement('button');b.className='mg-def';b.type='button';b.textContent=p[1];b.dataset.k=p[0];
+    b.addEventListener('click',function(){if(b.classList.contains('matched'))return;if(!mg.sel){b.classList.remove('shake');void b.offsetWidth;b.classList.add('shake');return}
+      if(mg.sel.dataset.k===b.dataset.k){mg.sel.classList.add('matched');mg.sel.setAttribute('aria-pressed','false');b.classList.add('matched');b.textContent=b.dataset.k+' — '+b.textContent;mg.ok++;mg.sel=null}
+      else{mg.miss++;b.classList.remove('shake');void b.offsetWidth;b.classList.add('shake')}mgScore()});D.appendChild(b)});mgScore()}
+function mgScore(){$('#mg-score').textContent='คะแนน '+mg.ok+'/'+mg.n+' · พลาด '+mg.miss+(mg.ok===mg.n?' · ครบแล้ว กดสุ่มชุดใหม่':'')}
+$('#mg-new').addEventListener('click',mgNew);mgNew();
+})();
+</script>
+</body></html>
